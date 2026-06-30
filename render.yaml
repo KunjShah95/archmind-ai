@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: archmind-api
+    runtime: python
+    repo: https://github.com/KunjShah95/archmind-ai
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      - key: CORS_ORIGINS
+        value: https://archmind-ai.vercel.app,https://archmind-ai-git-main-kunjshah95.vercel.app
+      - key: DEV_MODE
+        value: "false"
+      - key: PYTHON_VERSION
+        value: "3.12.8"
+    domains:
+      - archmind-api.onrender.com
