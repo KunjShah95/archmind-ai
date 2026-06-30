@@ -3,13 +3,73 @@ import { motion } from "framer-motion";
 import {
   ArrowRight, Sparkles, ShieldCheck, Gauge, TrendingUp,
   HeartPulse, DollarSign, Wrench, Activity, FileImage, FileCode2,
-  Workflow, Check, Github, Slack,
+  Workflow, Check, Github, Slack, Brain, Server,
+  ChevronDown, Star, Quote,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import { AGENTS } from "@/lib/mock-data";
+import {
+  Accordion, AccordionContent, AccordionItem, AccordionTrigger,
+} from "@/components/ui/accordion";
 
 const ICONS: Record<string, any> = { TrendingUp, ShieldCheck, HeartPulse, Gauge, DollarSign, Wrench, Activity };
+
+// Illustrative testimonials — generic roles, not real-company endorsements.
+const TESTIMONIALS = [
+  {
+    name: "Staff Engineer",
+    role: "Series-B developer-tools startup",
+    avatar: "SE",
+    quote: "ArchMind caught a caching misconfiguration that would've cost us thousands a month. The scalability agent spotted it in 30 seconds.",
+  },
+  {
+    name: "Principal Architect",
+    role: "Cloud infrastructure team",
+    avatar: "PA",
+    quote: "We run ArchMind on every RFC now. It's like having 7 senior engineers review your diagram before anyone sees a PR.",
+  },
+  {
+    name: "Platform CTO",
+    role: "Regulated fintech",
+    avatar: "CT",
+    quote: "It runs on local models via Ollama, so we use it without sending any data to third parties. That made compliance sign-off trivial.",
+  },
+];
+
+const FAQS = [
+  {
+    q: "How do the agents work?",
+    a: "Each agent is a specialized LLM prompt tuned to a specific architectural concern — scalability, security, reliability, performance, cost, maintainability, and observability. They analyze your diagram components and connections in parallel, then synthesize findings into actionable recommendations.",
+  },
+  {
+    q: "Do I need to pay for LLM API costs?",
+    a: "No! ArchMind supports free and open-source LLM providers out of the box. Run locally with Ollama (no data leaves your machine), use Groq's free tier for fast cloud inference, or bring your own OpenAI-compatible endpoint. No credit card required.",
+  },
+  {
+    q: "What diagram formats are supported?",
+    a: "Mermaid, PlantUML, Draw.io, Excalidraw, Lucidchart exports, Figma exports, PNG/JPG screenshots, and PDFs. We parse the structure and rebuild an interactive graph you can explore.",
+  },
+  {
+    q: "Can I self-host ArchMind?",
+    a: "Yes. The entire stack is open-source friendly. Run the FastAPI backend + React frontend anywhere. Set OLLAMA_BASE_URL for fully offline operation with no external API dependencies.",
+  },
+  {
+    q: "How accurate are the agent findings?",
+    a: "Accuracy depends on the LLM provider. Local models (Qwen 2.5, Llama 3) provide solid general analysis. Cloud models (Groq Mixtral) offer deeper reasoning. All findings include specific, actionable recommendations — not generic advice.",
+  },
+  {
+    q: "What about team collaboration?",
+    a: "Workspaces, role-based access, compare mode, and shared report links are included. Export findings as PDF, Markdown, or JSON for your RFCs and architecture decision records.",
+  },
+];
+
+const FREE_PROVIDERS = [
+  { name: "Ollama", desc: "Run local models on your hardware — fully offline", icon: Server },
+  { name: "Groq", desc: "Free fast inference — 30 req/s on Mixtral 8x7B", icon: Brain },
+  { name: "HuggingFace", desc: "Open-source model hub with free inference API", icon: Brain },
+  { name: "OpenAI-compatible", desc: "Any provider with a compatible API endpoint", icon: Server },
+];
 
 export default function Landing() {
   return (
@@ -17,10 +77,13 @@ export default function Landing() {
       <SiteHeader />
       <Hero />
       <LogoCloud />
+      <OpenSourceBanner />
       <AgentsSection />
       <DiagramSupport />
       <Workflow3Steps />
       <FeatureGrid />
+      <Testimonials />
+      <FAQ />
       <CTA />
       <SiteFooter />
     </div>
@@ -342,6 +405,101 @@ function CTA() {
             </Button>
           </Link>
         </div>
+      </div>
+    </section>
+  );
+}
+
+function OpenSourceBanner() {
+  return (
+    <section className="border-y border-border/60 bg-gradient-to-r from-primary/5 via-transparent to-primary/5">
+      <div className="container py-10">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-primary">
+              <Server className="h-3.5 w-3.5" /> Free & open-source
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Powered by local and free LLM providers — no API keys required.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-4">
+            {FREE_PROVIDERS.map((p) => (
+              <div key={p.name} className="flex items-center gap-2 rounded-lg border border-border/60 bg-background/50 px-3 py-2">
+                <p.icon className="h-4 w-4 text-primary" />
+                <div>
+                  <div className="text-xs font-medium">{p.name}</div>
+                  <div className="text-[10px] text-muted-foreground">{p.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Testimonials() {
+  return (
+    <section className="container py-24">
+      <div className="text-center max-w-2xl mx-auto">
+        <div className="text-xs uppercase tracking-widest text-primary">Trusted by engineers</div>
+        <h2 className="mt-2 font-display text-4xl font-semibold tracking-tight">Loved by teams that ship.</h2>
+      </div>
+      <div className="mt-12 grid md:grid-cols-3 gap-5">
+        {TESTIMONIALS.map((t, i) => (
+          <motion.div
+            key={t.name}
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.4, delay: i * 0.1 }}
+            className="relative rounded-xl border border-border bg-card p-6"
+          >
+            <Quote className="h-6 w-6 text-primary/30 absolute top-4 right-4" />
+            <div className="flex items-center gap-1 mb-4">
+              {Array.from({ length: 5 }).map((_, s) => (
+                <Star key={s} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+              ))}
+            </div>
+            <p className="text-sm text-foreground leading-relaxed">&ldquo;{t.quote}&rdquo;</p>
+            <div className="mt-5 flex items-center gap-3">
+              <div className="h-9 w-9 rounded-full bg-gradient-primary grid place-items-center text-xs font-bold text-primary-foreground">
+                {t.avatar}
+              </div>
+              <div>
+                <div className="text-sm font-medium">{t.name}</div>
+                <div className="text-xs text-muted-foreground">{t.role}</div>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function FAQ() {
+  return (
+    <section id="faq" className="border-t border-border/60 bg-card/30">
+      <div className="container py-24 max-w-3xl mx-auto">
+        <div className="text-center mb-12">
+          <div className="text-xs uppercase tracking-widest text-primary">FAQ</div>
+          <h2 className="mt-2 font-display text-4xl font-semibold tracking-tight">Questions? Answered.</h2>
+        </div>
+        <Accordion type="single" collapsible className="space-y-2">
+          {FAQS.map((faq, i) => (
+            <AccordionItem key={i} value={`faq-${i}`} className="rounded-xl border border-border bg-card px-5">
+              <AccordionTrigger className="text-sm font-medium hover:no-underline py-4">
+                {faq.q}
+              </AccordionTrigger>
+              <AccordionContent className="text-sm text-muted-foreground leading-relaxed pb-4">
+                {faq.a}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       </div>
     </section>
   );

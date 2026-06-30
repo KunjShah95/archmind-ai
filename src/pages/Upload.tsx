@@ -1,7 +1,8 @@
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PageHeader } from "@/components/PageHeader";
-import { UploadCloud, FileImage, X, Sparkles } from "lucide-react";
+import { UploadCloud, FileImage, X, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,24 +10,90 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { api, ApiError } from "@/lib/api";
+
+const MAX_BYTES = 25 * 1024 * 1024;
+const ACCEPT = ".png,.jpg,.jpeg,.pdf,.drawio,.excalidraw,.mmd,.puml,.svg,.json";
 
 export default function Upload() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [tab, setTab] = useState("upload");
   const [files, setFiles] = useState<File[]>([]);
   const [drag, setDrag] = useState(false);
+  const [name, setName] = useState("Untitled architecture");
+  const [pasteContent, setPasteContent] = useState("");
+  const [url, setUrl] = useState("");
+
+  const { data: workspaces = [] } = useQuery({
+    queryKey: ["workspaces"],
+    queryFn: () => api.listWorkspaces(),
+  });
+  const [workspaceId, setWorkspaceId] = useState<string | undefined>();
+
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      const ws = workspaceId || workspaces[0]?.id;
+      if (tab === "upload") {
+        if (!files.length) throw new Error("Choose at least one file");
+        const form = new FormData();
+        form.append("file", files[0]);
+        form.append("name", name);
+        if (ws) form.append("workspace_id", ws);
+        return api.uploadAnalysis(form);
+      }
+      if (tab === "paste") {
+        if (!pasteContent.trim()) throw new Error("Paste diagram code first");
+        return api.createAnalysis({
+          name,
+          workspace_id: ws,
+          source_type: "paste",
+          source_content: pasteContent,
+        });
+      }
+      if (!url.trim()) throw new Error("Enter a diagram URL");
+      return api.createAnalysis({
+        name,
+        workspace_id: ws,
+        source_type: "url",
+        source_content: url,
+      });
+    },
+    onSuccess: (analysis) => {
+      queryClient.invalidateQueries({ queryKey: ["analyses"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      toast.success("Analysis started", { description: "Agents are reviewing your diagram." });
+      navigate(`/analyses/${analysis.id}`);
+    },
+    onError: (err) => {
+      toast.error(err instanceof ApiError ? err.message : err instanceof Error ? err.message : "Failed to start analysis");
+    },
+  });
+
+  const addFiles = useCallback((incoming: File[]) => {
+    const valid = incoming.filter((f) => {
+      if (f.size > MAX_BYTES) {
+        toast.error(`${f.name} exceeds 25 MB`);
+        return false;
+      }
+      return true;
+    });
+    setFiles((prev) => {
+      const keys = new Set(prev.map((f) => `${f.name}-${f.size}`));
+      return [...prev, ...valid.filter((f) => !keys.has(`${f.name}-${f.size}`))];
+    });
+  }, []);
 
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setDrag(false);
-    const f = Array.from(e.dataTransfer.files);
-    setFiles((prev) => [...prev, ...f]);
-  }, []);
+    addFiles(Array.from(e.dataTransfer.files));
+  }, [addFiles]);
 
-  const startAnalysis = () => {
-    // TODO: POST to /api/analyses on FastAPI backend
-    toast.success("Analysis started", { description: "Agents are reviewing your diagram." });
-    setTimeout(() => navigate("/analyses/an_01"), 600);
-  };
+  const canStart =
+    (tab === "upload" && files.length > 0) ||
+    (tab === "paste" && pasteContent.trim().length > 0) ||
+    (tab === "url" && url.trim().length > 0);
 
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto">
@@ -35,7 +102,7 @@ export default function Upload() {
         description="Upload an architecture diagram, paste a diagram-as-code snippet, or import from a URL."
       />
 
-      <Tabs defaultValue="upload" className="w-full">
+      <Tabs value={tab} onValueChange={setTab} className="w-full">
         <TabsList className="bg-muted/40">
           <TabsTrigger value="upload">Upload</TabsTrigger>
           <TabsTrigger value="paste">Paste code</TabsTrigger>
@@ -61,9 +128,9 @@ export default function Upload() {
             </p>
             <div className="mt-5">
               <input
-                id="files" type="file" multiple className="hidden"
-                onChange={(e) => setFiles((p) => [...p, ...Array.from(e.target.files ?? [])])}
-                accept=".png,.jpg,.jpeg,.pdf,.drawio,.excalidraw,.mmd,.puml,.svg,.json"
+                id="files" type="file" className="hidden"
+                onChange={(e) => addFiles(Array.from(e.target.files ?? []))}
+                accept={ACCEPT}
               />
               <Label htmlFor="files">
                 <Button variant="outline" asChild><span>Choose files</span></Button>
@@ -74,14 +141,14 @@ export default function Upload() {
 
           {files.length > 0 && (
             <div className="mt-5 space-y-2">
-              {files.map((f, i) => (
-                <div key={i} className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5">
+              {files.map((f) => (
+                <div key={`${f.name}-${f.size}-${f.lastModified}`} className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5">
                   <FileImage className="h-4 w-4 text-primary" />
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-medium truncate">{f.name}</div>
                     <div className="text-xs text-muted-foreground">{(f.size / 1024).toFixed(1)} KB</div>
                   </div>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setFiles((p) => p.filter((_, j) => j !== i))}>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setFiles((p) => p.filter((x) => x !== f))}>
                     <X className="h-3.5 w-3.5" />
                   </Button>
                 </div>
@@ -92,6 +159,8 @@ export default function Upload() {
 
         <TabsContent value="paste" className="mt-5">
           <Textarea
+            value={pasteContent}
+            onChange={(e) => setPasteContent(e.target.value)}
             placeholder={`graph TD\n  A[Client] --> B[API Gateway]\n  B --> C[Service]\n  C --> D[(Database)]`}
             className="font-mono text-sm min-h-[280px] bg-card"
           />
@@ -100,7 +169,7 @@ export default function Upload() {
         <TabsContent value="url" className="mt-5">
           <div className="space-y-2">
             <Label>Diagram URL</Label>
-            <Input placeholder="https://lucid.app/lucidchart/..." />
+            <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://lucid.app/lucidchart/..." />
             <p className="text-xs text-muted-foreground">Works with Lucidchart, Figma share links, and public Draw.io URLs.</p>
           </div>
         </TabsContent>
@@ -114,19 +183,27 @@ export default function Upload() {
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label>Analysis name</Label>
-            <Input defaultValue="Untitled architecture" />
+            <Input value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div className="space-y-1.5">
             <Label>Workspace</Label>
-            <Input defaultValue="Platform" />
+            <Input
+              value={workspaces.find((w) => w.id === (workspaceId ?? workspaces[0]?.id))?.name ?? "Personal"}
+              readOnly
+              className="bg-muted/30"
+            />
           </div>
         </div>
       </div>
 
       <div className="mt-6 flex justify-end gap-2">
         <Button variant="outline" onClick={() => navigate(-1)}>Cancel</Button>
-        <Button onClick={startAnalysis} className="bg-gradient-primary text-primary-foreground hover:opacity-90">
-          Start analysis
+        <Button
+          disabled={!canStart || createMutation.isPending}
+          onClick={() => createMutation.mutate()}
+          className="bg-gradient-primary text-primary-foreground hover:opacity-90"
+        >
+          {createMutation.isPending ? <><Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> Starting…</> : "Start analysis"}
         </Button>
       </div>
     </div>

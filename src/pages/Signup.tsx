@@ -7,6 +7,7 @@ export default function Signup() {
       title="Create your account"
       subtitle="Start with 10 free analyses. No card required."
       cta="Create account"
+      mode="signup"
       alt={<>Already have an account? <Link to="/login" className="text-primary hover:underline">Sign in</Link></>}
       footer="By creating an account you agree to our Terms and Privacy Policy."
     />

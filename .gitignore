@@ -11,6 +11,16 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
+backend/.env
+backend/archmind.db
+backend/uploads/
+__pycache__/
+*.pyc
+.venv/
+
+# Build artifacts
+graphify-out/
 
 # Editor directories and files
 .vscode/*

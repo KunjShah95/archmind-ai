@@ -1,7 +1,7 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Upload as UploadIcon, FolderKanban, GitCompare,
-  Users, Settings as Cog, CreditCard, Search, Bell, ChevronDown,
+  Users, Settings as Cog, CreditCard, Search, ChevronDown, Menu,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { cn } from "@/lib/utils";
@@ -9,6 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { NotificationBell } from "@/components/NotificationBell";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -29,6 +34,38 @@ const SECONDARY = [
 
 export default function AppLayout() {
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+  const { data: stats } = useQuery({
+    queryKey: ["dashboard-stats"],
+    queryFn: () => api.dashboardStats(),
+  });
+  const { data: workspaces = [] } = useQuery({
+    queryKey: ["workspaces"],
+    queryFn: () => api.listWorkspaces(),
+  });
+
+  const initials = (user?.full_name || user?.email || "?")
+    .split(" ")
+    .map((s) => s[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  const usagePct = stats ? Math.min(100, Math.round((stats.analyses_used / stats.analyses_limit) * 100)) : 0;
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/login");
+  };
+
+  const NavLinks = ({ onNavigate }: { onNavigate?: () => void }) => (
+    <>
+      {NAV.map((i) => <NavItem key={i.to} {...i} onClick={onNavigate} />)}
+      <div className="px-3 pt-6 pb-2 text-[11px] uppercase tracking-wider text-muted-foreground">Account</div>
+      {SECONDARY.map((i) => <NavItem key={i.to} {...i} onClick={onNavigate} />)}
+    </>
+  );
+
   return (
     <div className="h-screen w-full flex bg-background text-foreground">
       <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-border bg-sidebar">
@@ -38,39 +75,36 @@ export default function AppLayout() {
         <div className="p-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="w-full flex items-center justify-between gap-2 rounded-md border border-sidebar-border bg-sidebar-accent/40 px-3 py-2 text-sm hover:bg-sidebar-accent transition">
+              <button type="button" className="w-full flex items-center justify-between gap-2 rounded-md border border-sidebar-border bg-sidebar-accent/40 px-3 py-2 text-sm hover:bg-sidebar-accent transition">
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="h-5 w-5 rounded bg-gradient-primary grid place-items-center text-[10px] font-bold text-primary-foreground">P</div>
-                  <span className="truncate font-medium">Platform</span>
+                  <div className="h-5 w-5 rounded bg-gradient-primary grid place-items-center text-[10px] font-bold text-primary-foreground">
+                    {(workspaces[0]?.name ?? "P")[0]}
+                  </div>
+                  <span className="truncate font-medium">{workspaces[0]?.name ?? "Personal"}</span>
                 </div>
                 <ChevronDown className="h-3.5 w-3.5 opacity-60" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-56">
-              <DropdownMenuLabel>Workspaces</DropdownMenuLabel>
-              <DropdownMenuItem>Platform</DropdownMenuItem>
-              <DropdownMenuItem>AI</DropdownMenuItem>
-              <DropdownMenuItem>Infra</DropdownMenuItem>
+              {workspaces.map((w) => (
+                <DropdownMenuItem key={w.id}>{w.name}</DropdownMenuItem>
+              ))}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => navigate("/workspaces")}>Manage workspaces</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
         <nav className="flex-1 px-2 py-1 space-y-0.5 overflow-y-auto scrollbar-thin">
-          {NAV.map((i) => (
-            <NavItem key={i.to} {...i} />
-          ))}
-          <div className="px-3 pt-6 pb-2 text-[11px] uppercase tracking-wider text-muted-foreground">Account</div>
-          {SECONDARY.map((i) => (
-            <NavItem key={i.to} {...i} />
-          ))}
+          <NavLinks />
         </nav>
         <div className="p-3 border-t border-sidebar-border">
           <div className="rounded-lg border border-sidebar-border p-3 bg-gradient-to-br from-primary/10 to-transparent">
-            <div className="text-xs font-medium">Free plan</div>
-            <div className="text-[11px] text-muted-foreground mb-2">3 of 10 analyses used</div>
+            <div className="text-xs font-medium capitalize">{stats?.plan ?? "hobby"} plan</div>
+            <div className="text-[11px] text-muted-foreground mb-2">
+              {stats?.analyses_used ?? 0} of {stats?.analyses_limit ?? 10} analyses used
+            </div>
             <div className="h-1.5 rounded bg-muted overflow-hidden">
-              <div className="h-full w-[30%] bg-gradient-primary" />
+              <div className="h-full bg-gradient-primary" style={{ width: `${usagePct}%` }} />
             </div>
             <Button size="sm" className="w-full mt-3" onClick={() => navigate("/pricing")}>Upgrade</Button>
           </div>
@@ -79,36 +113,50 @@ export default function AppLayout() {
 
       <div className="flex-1 flex flex-col min-w-0">
         <header className="h-14 border-b border-border flex items-center gap-3 px-4 md:px-6 bg-background/80 backdrop-blur-xl sticky top-0 z-30">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden h-9 w-9" aria-label="Open menu">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-72 p-0 bg-sidebar">
+              <div className="h-14 flex items-center px-5 border-b border-sidebar-border">
+                <Logo />
+              </div>
+              <nav className="p-2 space-y-0.5">
+                <NavLinks />
+              </nav>
+            </SheetContent>
+          </Sheet>
+
           <div className="relative max-w-md flex-1">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search analyses, findings, components…" className="pl-8 h-9 bg-muted/40 border-transparent focus-visible:bg-background" />
-            <kbd className="hidden md:inline-flex absolute right-2 top-1/2 -translate-y-1/2 items-center rounded border border-border bg-muted px-1.5 text-[10px] text-muted-foreground">⌘K</kbd>
+            <Input placeholder="Search analyses…" className="pl-8 h-9 bg-muted/40 border-transparent focus-visible:bg-background" onKeyDown={(e) => {
+              if (e.key === "Enter") navigate(`/analyses?q=${encodeURIComponent((e.target as HTMLInputElement).value)}`);
+            }} />
           </div>
           <div className="ml-auto flex items-center gap-1.5">
             <ThemeToggle />
-            <Button size="icon" variant="ghost" className="h-9 w-9 relative">
-              <Bell className="h-4 w-4" />
-              <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-primary" />
-            </Button>
+            <NotificationBell />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 pl-2 pr-1 py-1 rounded-md hover:bg-muted">
+                <button type="button" className="flex items-center gap-2 pl-2 pr-1 py-1 rounded-md hover:bg-muted">
                   <Avatar className="h-7 w-7">
-                    <AvatarFallback className="bg-gradient-primary text-primary-foreground text-xs">AC</AvatarFallback>
+                    <AvatarFallback className="bg-gradient-primary text-primary-foreground text-xs">{initials}</AvatarFallback>
                   </Avatar>
-                  <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+                  <ChevronDown className="h-3.5 w-3.5 opacity-60 hidden sm:block" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>
-                  <div className="font-medium">Alex Chen</div>
-                  <div className="text-xs font-normal text-muted-foreground">alex@archmind.ai</div>
+                  <div className="font-medium">{user?.full_name ?? "User"}</div>
+                  <div className="text-xs font-normal text-muted-foreground">{user?.email}</div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate("/settings")}>Settings</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate("/billing")}>Billing</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate("/")}>Sign out</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut}>Sign out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -121,10 +169,13 @@ export default function AppLayout() {
   );
 }
 
-function NavItem({ to, label, icon: Icon }: { to: string; label: string; icon: any }) {
+function NavItem({ to, label, icon: Icon, onClick }: {
+  to: string; label: string; icon: React.ComponentType<{ className?: string }>; onClick?: () => void;
+}) {
   return (
     <NavLink
       to={to}
+      onClick={onClick}
       className={({ isActive }) =>
         cn(
           "flex items-center gap-2.5 px-3 py-1.5 rounded-md text-sm transition-colors",

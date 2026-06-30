@@ -1,16 +1,41 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { PageHeader } from "@/components/PageHeader";
-import { MOCK_ANALYSES, AGENTS, AgentKey, scoreColor } from "@/lib/mock-data";
+import { AGENTS, AgentKey, scoreColor } from "@/lib/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScoreRing } from "@/components/ScoreRing";
 import { ArrowRight, Minus, TrendingDown, TrendingUp } from "lucide-react";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
 
 export default function Compare() {
-  const ready = MOCK_ANALYSES.filter((a) => a.status === "ready");
-  const [a, setA] = useState(ready[0].id);
-  const [b, setB] = useState(ready[1].id);
-  const A = ready.find((x) => x.id === a)!;
-  const B = ready.find((x) => x.id === b)!;
+  const { data: analyses = [], isLoading } = useQuery({
+    queryKey: ["analyses"],
+    queryFn: () => api.listAnalyses(),
+  });
+  const ready = analyses.filter((a) => a.status === "ready");
+  const [a, setA] = useState<string | undefined>();
+  const [b, setB] = useState<string | undefined>();
+
+  const idA = a ?? ready[0]?.id;
+  const idB = b ?? ready[1]?.id ?? ready[0]?.id;
+  const A = ready.find((x) => x.id === idA);
+  const B = ready.find((x) => x.id === idB);
+
+  if (isLoading) {
+    return <div className="p-8 text-center text-muted-foreground">Loading…</div>;
+  }
+
+  if (ready.length < 2) {
+    return (
+      <div className="p-6 md:p-8 max-w-6xl mx-auto">
+        <PageHeader title="Compare analyses" description="See what changed between two versions of an architecture." />
+        <p className="text-sm text-muted-foreground">You need at least two completed analyses to compare. Run more reviews first.</p>
+      </div>
+    );
+  }
+
+  if (!A || !B) return null;
 
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto">
@@ -19,10 +44,14 @@ export default function Compare() {
         description="See what changed between two versions of an architecture."
       />
 
+      {idA === idB && (
+        <p className="mb-4 text-sm text-amber-500">Select two different analyses for a meaningful comparison.</p>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-3 mb-6">
-        <Picker value={a} onChange={setA} options={ready} label="Base" />
+        <Picker value={idA!} onChange={setA} options={ready} label="Base" />
         <ArrowRight className="hidden md:block h-5 w-5 text-muted-foreground justify-self-center" />
-        <Picker value={b} onChange={setB} options={ready} label="Compare" />
+        <Picker value={idB!} onChange={(v) => { setB(v); if (v === idA) toast.message("Choose a different analysis for compare side"); }} options={ready} label="Compare" />
       </div>
 
       <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -32,14 +61,14 @@ export default function Compare() {
           <div className="text-center">{B.name}</div>
         </div>
         {AGENTS.map((ag) => {
-          const sA = A.scores[ag.key as AgentKey];
-          const sB = B.scores[ag.key as AgentKey];
+          const sA = A.scores[ag.key as AgentKey] ?? 0;
+          const sB = B.scores[ag.key as AgentKey] ?? 0;
           const delta = sB - sA;
           const TrendIcon = delta > 0 ? TrendingUp : delta < 0 ? TrendingDown : Minus;
           const trendColor = delta > 0 ? "text-success" : delta < 0 ? "text-danger" : "text-muted-foreground";
           return (
             <div key={ag.key} className="grid grid-cols-3 items-center px-5 py-4 border-b border-border last:border-b-0">
-              <div className="text-sm font-medium">{ag.name.replace(" Agent","")}</div>
+              <div className="text-sm font-medium">{ag.name.replace(" Agent", "")}</div>
               <div className="flex items-center justify-center gap-3">
                 <ScoreRing value={sA} size={44} />
               </div>
@@ -59,7 +88,8 @@ export default function Compare() {
 }
 
 function Picker({ value, onChange, options, label }: {
-  value: string; onChange: (v: string) => void; options: typeof MOCK_ANALYSES; label: string;
+  value: string; onChange: (v: string) => void;
+  options: Awaited<ReturnType<typeof api.listAnalyses>>; label: string;
 }) {
   return (
     <div className="rounded-xl border border-border bg-card p-4">
