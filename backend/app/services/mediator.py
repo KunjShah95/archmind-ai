@@ -4,7 +4,7 @@ Receives per-agent findings + scores, then calls the LLM to produce a
 consolidated report with ranked findings, trade-off tensions, and confidence.
 """
 
-from app.services.agents import AGENT_KEYS, AGENT_NAMES, AgentFinding
+from app.services.agents import AGENT_KEYS, AGENT_NAMES, AgentFinding, edge_descriptions
 from app.services.llm import llm_complete, _extract_json
 
 MEDIATOR_SYSTEM_PROMPT = (
@@ -85,7 +85,7 @@ def _build_mediator_prompt(
 def run_mediator(
     nodes: list[dict],
     edges: list[dict],
-    findings: list[AgentFinding],
+    findings: list[AgentFinding | dict],
     scores: dict[str, int],
 ) -> dict | None:
     """Run the mediator LLM to synthesise all agent findings.
@@ -95,7 +95,7 @@ def run_mediator(
     from app.services.diagram import node_labels
 
     labels = list(node_labels(nodes).values())
-    edges_desc = _edge_descriptions(nodes, edges)
+    edges_desc = edge_descriptions(nodes, edges)
 
     findings_by_agent: dict[str, list[dict]] = {k: [] for k in AGENT_KEYS}
     for f in findings:
@@ -113,18 +113,10 @@ def run_mediator(
     if data is None:
         return None
 
-    if "consolidated_findings" not in data and "final_score" not in data:
+    if "consolidated_findings" not in data or "final_score" not in data:
         return None
 
     return data
 
 
-def _edge_descriptions(nodes: list[dict], edges: list[dict]) -> list[str]:
-    from app.services.diagram import node_labels
-    labels = node_labels(nodes)
-    descs: list[str] = []
-    for e in edges:
-        src = labels.get(e.get("source", ""), e.get("source", "?"))
-        tgt = labels.get(e.get("target", ""), e.get("target", "?"))
-        descs.append(f"{src} -> {tgt}")
-    return descs
+

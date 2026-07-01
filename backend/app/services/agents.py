@@ -214,7 +214,7 @@ def _compute_scores(findings: list[AgentFinding]) -> dict[str, int]:
     return scores
 
 
-def _edge_descriptions(nodes: list[dict], edges: list[dict]) -> list[str]:
+def edge_descriptions(nodes: list[dict], edges: list[dict]) -> list[str]:
     labels = node_labels(nodes)
     descs: list[str] = []
     for e in edges:
@@ -222,6 +222,8 @@ def _edge_descriptions(nodes: list[dict], edges: list[dict]) -> list[str]:
         tgt = labels.get(e.get("target", ""), e.get("target", "?"))
         descs.append(f"{src} -> {tgt}")
     return descs
+
+_edge_descriptions = edge_descriptions  # backward compat
 
 
 def _llm_findings(nodes: list[dict], edges: list[dict]) -> tuple[list[AgentFinding], dict[str, int]] | None:
@@ -300,61 +302,168 @@ def run_single_agent(agent_key: str, nodes: list[dict], edges: list[dict]) -> tu
     return agent_findings, max(35, min(98, score))
 
 
-def chat_response(message: str, findings: list[Any], scores: dict[str, int]) -> str:
-    """Context-aware chat — tries LLM first, falls back to rule-based."""
+def chat_response(
+    message: str,
+    findings: list[Any],
+    scores: dict[str, int],
+    nodes: list[dict] | None = None,
+    edges: list[dict] | None = None,
+    chat_history: list[dict] | None = None,
+    generated_artifacts: dict | None = None,
+) -> str:
+    """Context-aware architecture copilot — tries LLM first, falls back to rule-based.
+
+    Enhanced in Phase 1 to accept full architecture context for deeper reasoning.
+    """
     from app.services.llm import llm_complete
-    if not findings:
+    if not findings and not nodes:
         return "No findings available yet. Upload a diagram to start analysis."
 
     findings_text = "\n".join(
         f"- [{getattr(f, 'severity', f.get('severity') if isinstance(f, dict) else '?').upper()}] "
-        f"{getattr(f, 'title', f.get('title', '') if isinstance(f, dict) else '')}"
-        for f in findings[:10]
+        f"{getattr(f, 'title', f.get('title', '') if isinstance(f, dict) else '')}: "
+        f"{getattr(f, 'summary', f.get('summary', '') if isinstance(f, dict) else '')}"
+        for f in (findings or [])[:12]
     )
-    scores_text = ", ".join(f"{k}: {v}" for k, v in (scores or {}).items())
+    scores_text = ", ".join(f"{k}: {v}/100" for k, v in (scores or {}).items())
+
+    # Build rich context
+    context_parts = [f"Architecture scores: {scores_text}"]
+    if nodes:
+        labels = list(node_labels(nodes).values())
+        context_parts.append(f"Components ({len(nodes)}): {', '.join(labels)}")
+    if edges:
+        edge_labels = _edge_descriptions(nodes or [], edges)
+        context_parts.append(f"Connections ({len(edges)}): {'; '.join(edge_labels[:15])}")
+    if findings_text:
+        context_parts.append(f"Top findings:\n{findings_text}")
+    if generated_artifacts:
+        if generated_artifacts.get("tech_stack"):
+            context_parts.append(f"Tech stack: {generated_artifacts['tech_stack']}")
+
+    # Include recent chat history for multi-turn reasoning
+    history_text = ""
+    if chat_history:
+        recent = chat_history[-6:]  # Last 3 exchanges
+        history_text = "\n".join(
+            f"{'User' if m.get('role') == 'user' else 'Assistant'}: {m.get('content', '')[:200]}"
+            for m in recent
+        )
+        context_parts.append(f"Recent conversation:\n{history_text}")
 
     system = (
-        "You are an architecture expert assistant. You have access to analysis findings and scores "
-        "from 7 specialized AI agents. Answer the user's question concisely based on this data."
+        "You are ArchMind AI, an expert architecture copilot. You have deep knowledge of "
+        "the user's specific architecture including all components, connections, findings from "
+        "7 specialized AI agents (scalability, security, reliability, performance, cost, "
+        "maintainability, observability), and any generated artifacts.\n\n"
+        "You can answer questions about:\n"
+        "- Bottleneck analysis and performance optimization\n"
+        "- Failure scenarios ('What happens if X fails?')\n"
+        "- Component removal impact ('Can I remove Kafka?')\n"
+        "- Cost estimation at different scales\n"
+        "- Latency analysis and optimization\n"
+        "- Architecture trade-offs and recommendations\n"
+        "- Migration strategies\n\n"
+        "Be specific and actionable. Reference actual components from the architecture. "
+        "Use markdown formatting for readability."
     )
-    prompt = (
-        f"Architecture scores: {scores_text}\n\n"
-        f"Top findings:\n{findings_text}\n\n"
-        f"User question: {message}\n\n"
-        f"Answer concisely and helpfully."
-    )
+    prompt = "\n\n".join(context_parts) + f"\n\nUser question: {message}\n\nAnswer helpfully with specific details from this architecture."
 
     llm_reply = llm_complete(system, prompt)
     if llm_reply:
         return llm_reply.strip()
 
+    # ── Heuristic fallback (expanded) ──
     msg = message.lower()
-    critical = [f for f in findings if getattr(f, "severity", f.get("severity") if isinstance(f, dict) else None) == "critical"]
+    labels = list(node_labels(nodes).values()) if nodes else []
+    critical = [f for f in (findings or []) if getattr(f, "severity", f.get("severity") if isinstance(f, dict) else None) == "critical"]
+
+    if "bottleneck" in msg or "slow" in msg or "latency" in msg:
+        perf = scores.get("performance", 0)
+        bottlenecks = [f for f in (findings or []) if getattr(f, "agent", f.get("agent") if isinstance(f, dict) else "") == "performance"]
+        if bottlenecks:
+            top = bottlenecks[0]
+            title = getattr(top, "title", top.get("title", "") if isinstance(top, dict) else "")
+            return (
+                f"**Performance score: {perf}/100**\n\n"
+                f"Primary bottleneck: **{title}**\n\n"
+                f"Your architecture has {len(edges or [])} connections between {len(nodes or [])} components. "
+                f"A high edge-to-node ratio suggests chatty synchronous dependencies. "
+                f"Consider adding caching at hot paths and using async communication where possible."
+            )
+        return f"Performance score: {perf}/100. The synchronous call graph may be causing latency issues. Consider caching and async processing."
+
+    if any(kw in msg for kw in ["what if", "fails", "crash", "unavailable", "goes down"]):
+        # Failure scenario
+        failed_component = None
+        for label in labels:
+            if label.lower() in msg:
+                failed_component = label
+                break
+        if failed_component:
+            return (
+                f"**Failure scenario: {failed_component} goes down**\n\n"
+                f"If **{failed_component}** fails, any component that connects to it directly will be affected. "
+                f"Check if you have:\n"
+                f"- ✅ Circuit breakers to prevent cascading failures\n"
+                f"- ✅ Retry logic with exponential backoff\n"
+                f"- ✅ Fallback/degraded mode for dependent services\n"
+                f"- ✅ Health checks and automatic restart\n\n"
+                f"Your reliability score is **{scores.get('reliability', 0)}/100**. "
+                f"Consider adding redundancy and a dead-letter queue for async paths."
+            )
+        return "Specify which component you'd like to simulate a failure for, and I'll analyze the blast radius."
+
+    if "remove" in msg or "can i" in msg or "do i need" in msg:
+        return (
+            f"Removing a component requires analyzing its upstream and downstream dependencies. "
+            f"Your architecture has {len(nodes or [])} components. "
+            f"Check if the component you want to remove has:\n"
+            f"- Direct consumers that would break\n"
+            f"- Data that needs migrating\n"
+            f"- Cross-cutting concerns it handles (auth, logging)\n\n"
+            f"Tell me which specific component you're considering removing."
+        )
+
+    if "cost" in msg or "expensive" in msg or "spend" in msg or "budget" in msg:
+        cost_score = scores.get("cost", 0)
+        return (
+            f"**Cost efficiency: {cost_score}/100**\n\n"
+            f"Your architecture has {len(nodes or [])} components. Estimated optimizations:\n"
+            f"- 🔧 Right-size compute instances based on actual CPU/memory usage\n"
+            f"- 💰 Use spot/preemptible instances for stateless workers\n"
+            f"- 📊 Review CDN/API egress overlap\n"
+            f"- ⚡ Enable aggressive autoscaling scale-in policies\n\n"
+            f"Try the **Redesign** feature with 'Cost Optimized' strategy for detailed savings."
+        )
 
     if "scale" in msg or "million" in msg or "users" in msg:
         return (
-            f"Based on your current scores (scalability: {scores.get('scalability', 0)}/100), "
-            "horizontal scaling of stateless tiers looks feasible, but cache and database layers need "
-            "multi-AZ hardening before targeting 10M users. I'd prioritize the cache failover finding first."
+            f"**Scalability score: {scores.get('scalability', 0)}/100**\n\n"
+            f"To scale this architecture:\n"
+            f"1. Ensure all API/service tiers are stateless\n"
+            f"2. Add read replicas for the database\n"
+            f"3. Implement connection pooling\n"
+            f"4. Use CDN for static assets\n"
+            f"5. Add message queues for async decoupling\n\n"
+            f"Try the **Traffic Simulation** feature to see how your architecture handles different load levels."
         )
-    if "cost" in msg or ("reduce" in msg and "spend" in msg):
-        return (
-            f"Cost efficiency is at {scores.get('cost', 0)}/100. Start with right-sizing workers and "
-            "enabling autoscaling scale-in. Review CDN/API egress overlap to cut data transfer charges."
-        )
-    if "bottleneck" in msg or "slow" in msg:
-        return (
-            f"Performance score: {scores.get('performance', 0)}/100. The dense synchronous call graph "
-            "and potential N+1 patterns on the order service are your top bottlenecks."
-        )
+
     if critical:
         c = critical[0]
         title = c.title if hasattr(c, "title") else c.get("title", "")
         rec = c.recommendation if hasattr(c, "recommendation") else c.get("recommendation", "")
-        return f"The most urgent issue is: **{title}**. {rec} Want me to draft an implementation plan?"
+        return f"🚨 **Most urgent issue: {title}**\n\n{rec}\n\nWant me to explain the impact or suggest a fix?"
 
     avg = round(sum(scores.values()) / max(1, len(scores)))
     return (
-        f"Your overall architecture health is around {avg}/100. "
-        "Ask me about scalability, costs, security, bottlenecks, microservices migration, or Terraform."
+        f"**Architecture health: {avg}/100**\n\n"
+        f"I can help with:\n"
+        f"- 🔍 **Bottleneck analysis** — \"Where is my bottleneck?\"\n"
+        f"- 💥 **Failure scenarios** — \"What if Redis fails?\"\n"
+        f"- 🗑️ **Component removal** — \"Can I remove Kafka?\"\n"
+        f"- 💰 **Cost estimation** — \"How much at 1M users?\"\n"
+        f"- ⚡ **Latency analysis** — \"Why is latency high?\"\n"
+        f"- 🔄 **Migration advice** — \"How to split this monolith?\"\n\n"
+        f"Ask me anything about your architecture!"
     )
