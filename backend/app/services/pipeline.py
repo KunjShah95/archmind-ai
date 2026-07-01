@@ -10,6 +10,7 @@ from app.config import get_settings
 from app.models import Analysis, Finding, Profile, Workspace, WorkspaceMember
 from app.services.agents import run_agents
 from app.services.diagram import build_diagram, detect_diagram_type
+from app.services.mediator import run_mediator
 from app.services.llm import llm_vision_extract_graph
 from app.services.render import to_vision_image
 
@@ -105,6 +106,9 @@ def run_analysis_pipeline(db: Session, analysis_id: str) -> None:
 
     findings_data, scores = run_agents(nodes, edges)
 
+    # Run mediator to synthesise agent findings
+    mediator_report = run_mediator(nodes, edges, findings_data, scores)
+
     # Clear old findings
     db.query(Finding).filter(Finding.analysis_id == analysis_id).delete()
 
@@ -123,6 +127,7 @@ def run_analysis_pipeline(db: Session, analysis_id: str) -> None:
     analysis.diagram_nodes = nodes
     analysis.diagram_edges = edges
     analysis.scores = scores
+    analysis.mediator_report = mediator_report
     analysis.status = "ready"
     db.commit()
 
