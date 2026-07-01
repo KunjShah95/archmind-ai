@@ -15,6 +15,11 @@ from app.schemas import (
     ChatRequest,
     CreateAnalysisBody,
     FindingOut,
+    GenerateRequest,
+    RedesignRequest,
+    RedesignResult,
+    ComponentExplanation,
+    ArchitectureWalkthrough,
 )
 from app.services.agents import (
     AGENT_KEYS, AGENT_NAMES, AGENT_DESCRIPTIONS, AGENT_ACCENTS,
@@ -28,6 +33,9 @@ from app.services.pipeline import (
     run_analysis_pipeline,
     save_upload,
 )
+from app.services.generator import generate_architecture, architecture_to_graph
+from app.services.redesign import redesign_architecture, STRATEGIES
+from app.services.learning import explain_component, explain_architecture
 from app.config import get_settings
 
 router = APIRouter(prefix="/api/analyses", tags=["analyses"])
@@ -89,6 +97,10 @@ def get_analysis(
         diagram_nodes=a.diagram_nodes or [],
         diagram_edges=a.diagram_edges or [],
         findings=[FindingOut.model_validate(f) for f in a.findings],
+        analysis_mode=a.analysis_mode or "review",
+        generation_prompt=a.generation_prompt,
+        generated_artifacts=a.generated_artifacts,
+        mediator_report=a.mediator_report,
     )
 
 
@@ -185,8 +197,22 @@ def post_chat(
     if not a or not _user_can_access(db, user.id, a):
         raise HTTPException(status_code=404, detail="Analysis not found")
 
+    # Build chat history for multi-turn context
+    history = [
+        {"role": m.role, "content": m.content}
+        for m in a.messages
+    ]
+
     db.add(ChatMessage(analysis_id=analysis_id, user_id=user.id, role="user", content=body.message))
-    reply = chat_response(body.message, a.findings, a.scores or {})
+    reply = chat_response(
+        body.message,
+        a.findings,
+        a.scores or {},
+        nodes=a.diagram_nodes,
+        edges=a.diagram_edges,
+        chat_history=history,
+        generated_artifacts=a.generated_artifacts,
+    )
     msg = ChatMessage(analysis_id=analysis_id, user_id=None, role="assistant", content=reply)
     db.add(msg)
     db.commit()
@@ -319,3 +345,137 @@ def get_agent_report(
         "edge_count": len(a.diagram_edges or []),
         "diagram_type": a.diagram_type,
     }
+
+
+# ── Phase 1: AI Architecture Generator ──
+
+@router.post("/generate", response_model=AnalysisSummary)
+def generate_analysis(
+    body: GenerateRequest,
+    background_tasks: BackgroundTasks,
+    user: Annotated[Profile, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Generate a complete architecture from a natural language description."""
+    check_analysis_quota(db, user)
+    ws = ensure_default_workspace(db, user)
+
+    # Generate the architecture
+    arch = generate_architecture(
+        body.prompt,
+        body.target_users,
+        body.cloud_provider,
+        body.constraints,
+    )
+
+    # Parse the generated diagram into nodes/edges
+    nodes, edges = architecture_to_graph(arch)
+
+    # Create a descriptive name from the prompt
+    name = body.prompt[:60].strip()
+    if len(body.prompt) > 60:
+        name += "..."
+
+    analysis = Analysis(
+        workspace_id=ws.id,
+        author_id=user.id,
+        name=name,
+        source_type="generated",
+        source_content=arch.get("diagram_mermaid", ""),
+        diagram_type="Mermaid",
+        diagram_nodes=nodes,
+        diagram_edges=edges,
+        analysis_mode="generate",
+        generation_prompt=body.prompt,
+        generated_artifacts={
+            "tech_stack": arch.get("tech_stack", {}),
+            "database_choices": arch.get("database_choices", []),
+            "api_design": arch.get("api_design", {}),
+            "queue_system": arch.get("queue_system", {}),
+            "cdn_strategy": arch.get("cdn_strategy", {}),
+            "kubernetes_manifest": arch.get("kubernetes_manifest", ""),
+            "terraform_starter": arch.get("terraform_starter", ""),
+        },
+        status="queued",
+    )
+    db.add(analysis)
+    db.commit()
+    db.refresh(analysis)
+    increment_usage(db, user)
+
+    # Queue the review pipeline to also analyze the generated architecture
+    background_tasks.add_task(_run_pipeline_task, analysis.id)
+    return _to_summary(analysis, db)
+
+
+# ── Phase 1: Architecture Redesign ──
+
+@router.get("/redesign/strategies")
+def list_strategies():
+    """List available redesign strategies."""
+    return [
+        {"key": k, **v}
+        for k, v in STRATEGIES.items()
+    ]
+
+
+@router.post("/{analysis_id}/redesign")
+def redesign_analysis(
+    analysis_id: str,
+    body: RedesignRequest,
+    user: Annotated[Profile, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Redesign an architecture using a specific optimization strategy."""
+    a = db.get(Analysis, analysis_id)
+    if not a or not _user_can_access(db, user.id, a):
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    if body.strategy not in STRATEGIES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown strategy: {body.strategy}. Use one of: {', '.join(STRATEGIES.keys())}",
+        )
+
+    result = redesign_architecture(
+        a.diagram_nodes or [],
+        a.diagram_edges or [],
+        body.strategy,
+    )
+    return result
+
+
+# ── Phase 1: Learning Mode ──
+
+@router.get("/{analysis_id}/learn")
+def get_architecture_walkthrough(
+    analysis_id: str,
+    user: Annotated[Profile, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Get a full educational walkthrough of the architecture."""
+    a = db.get(Analysis, analysis_id)
+    if not a or not _user_can_access(db, user.id, a):
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    return explain_architecture(a.diagram_nodes or [], a.diagram_edges or [])
+
+
+@router.get("/{analysis_id}/learn/{node_id}")
+def get_component_explanation(
+    analysis_id: str,
+    node_id: str,
+    user: Annotated[Profile, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Get an educational explanation for a specific component."""
+    a = db.get(Analysis, analysis_id)
+    if not a or not _user_can_access(db, user.id, a):
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    nodes = a.diagram_nodes or []
+    node_ids = {n["id"] for n in nodes}
+    if node_id not in node_ids:
+        raise HTTPException(status_code=404, detail=f"Node '{node_id}' not found in this analysis")
+
+    return explain_component(node_id, nodes, a.diagram_edges or [])
