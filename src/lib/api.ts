@@ -1,5 +1,5 @@
 import { getStoredToken, setStoredToken } from "./supabase";
-import type { AgentKey } from "./types";
+import type { AgentKey, RedesignResult, RedesignStrategy, ComponentExplanation, ArchitectureWalkthrough, GeneratedArtifacts, MediatorReport } from "./types";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
@@ -58,6 +58,10 @@ export type AnalysisDetail = Analysis & {
   diagram_nodes: Array<{ id: string; position: { x: number; y: number }; data: { label: string } }>;
   diagram_edges: Array<{ id: string; source: string; target: string }>;
   findings: Finding[];
+  analysis_mode?: string;
+  generation_prompt?: string | null;
+  generated_artifacts?: GeneratedArtifacts | null;
+  mediator_report?: MediatorReport | null;
 };
 
 export type Finding = {
@@ -196,6 +200,38 @@ export const api = {
 
   listMembers: (workspaceId: string) =>
     request<WorkspaceMember[]>(`/api/workspaces/${workspaceId}/members`),
+
+  // ── Phase 1: Generator ──
+
+  generateArchitecture: (body: {
+    prompt: string;
+    target_users?: string;
+    cloud_provider?: string;
+    constraints?: Record<string, any>;
+  }) =>
+    request<Analysis>("/api/analyses/generate", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  // ── Phase 1: Redesign ──
+
+  getRedesignStrategies: () =>
+    request<RedesignStrategy[]>("/api/analyses/redesign/strategies"),
+
+  redesignArchitecture: (analysisId: string, strategy: string) =>
+    request<RedesignResult>(`/api/analyses/${analysisId}/redesign`, {
+      method: "POST",
+      body: JSON.stringify({ strategy }),
+    }),
+
+  // ── Phase 1: Learning Mode ──
+
+  getArchitectureWalkthrough: (analysisId: string) =>
+    request<ArchitectureWalkthrough>(`/api/analyses/${analysisId}/learn`),
+
+  getComponentExplanation: (analysisId: string, nodeId: string) =>
+    request<ComponentExplanation>(`/api/analyses/${analysisId}/learn/${encodeURIComponent(nodeId)}`),
 };
 
 export { setStoredToken };

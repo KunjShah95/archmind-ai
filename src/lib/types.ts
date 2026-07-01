@@ -2,6 +2,7 @@
 
 export type Severity = "low" | "medium" | "high" | "critical";
 export type AgentStatus = "pending" | "running" | "completed" | "failed";
+export type AnalysisMode = "review" | "generate" | "pair" | "iac_review" | "api_review" | "db_review";
 
 export type AgentKey =
   | "scalability"
@@ -46,3 +47,103 @@ export function overallScore(scores: Record<string, number>) {
   if (!vals.length) return 0;
   return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
 }
+
+// ── Phase 1: Generator ──
+
+export type GeneratedArtifacts = {
+  tech_stack: Record<string, string>;
+  database_choices: Array<{ name: string; purpose: string; rationale: string }>;
+  api_design: Record<string, any>;
+  queue_system: Record<string, any>;
+  cdn_strategy: Record<string, any>;
+  kubernetes_manifest: string;
+  terraform_starter: string;
+};
+
+// ── Phase 1: Redesign ──
+
+export type RedesignStrategy = {
+  key: string;
+  name: string;
+  description: string;
+  icon: string;
+  accent: string;
+};
+
+export type RedesignChange = {
+  type: "added" | "removed" | "modified";
+  component: string;
+  description: string;
+};
+
+export type RedesignTradeOff = {
+  aspect: string;
+  impact: "positive" | "negative" | "neutral";
+  description: string;
+};
+
+export type RedesignResult = {
+  strategy: string;
+  original_nodes: Array<{ id: string; position: { x: number; y: number }; data: { label: string } }>;
+  original_edges: Array<{ id: string; source: string; target: string }>;
+  redesigned_nodes: Array<{ id: string; position: { x: number; y: number }; data: { label: string } }>;
+  redesigned_edges: Array<{ id: string; source: string; target: string }>;
+  changes: RedesignChange[];
+  trade_offs: RedesignTradeOff[];
+  summary: string;
+};
+
+// ── Phase 1: Learning Mode ──
+
+export type ComponentExplanation = {
+  component: string;
+  what_it_does: string;
+  why_used: string;
+  alternatives: Array<{ name: string; trade_off: string }>;
+  best_practices: string[];
+  common_mistakes: string[];
+};
+
+export type ArchitectureWalkthrough = {
+  title: string;
+  summary: string;
+  components: ComponentExplanation[];
+  connections: Array<{ source: string; target: string; explanation: string }>;
+};
+
+// ── Copilot suggested questions ──
+
+export const COPILOT_SUGGESTIONS = [
+  { label: "Where's my bottleneck?", icon: "Search" },
+  { label: "What if Redis fails?", icon: "AlertTriangle" },
+  { label: "Can I remove Kafka?", icon: "Trash2" },
+  { label: "How much at 1M users?", icon: "DollarSign" },
+  { label: "Why is latency high?", icon: "Clock" },
+  { label: "How to split this monolith?", icon: "GitBranch" },
+];
+
+// ── Mediator Report (Debate) ──
+
+export type ConsolidatedFinding = {
+  finding: string;
+  severity: Severity;
+  agents_flagged: AgentKey[];
+  agents_disagree: AgentKey[] | null;
+  trade_off: string | null;
+  recommendation: string;
+  confidence: number;
+};
+
+export type TopTension = {
+  between: [AgentKey, AgentKey];
+  topic: string;
+  resolution: string;
+};
+
+export type MediatorReport = {
+  consolidated_findings: ConsolidatedFinding[];
+  final_score: number;
+  score_by_agent: Record<AgentKey, number>;
+  top_tensions: TopTension[];
+};
+

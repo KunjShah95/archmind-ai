@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ReactFlow, { Background, Controls, MarkerType, MiniMap } from "reactflow";
 import { motion } from "framer-motion";
 import {
-  Download, Share2, Sparkles, Send, ArrowLeft, Loader2,
+  Download, Share2, Sparkles, Send, ArrowLeft, Loader2, Scale,
   TrendingUp, ShieldCheck, HeartPulse, Gauge, DollarSign, Wrench, Activity,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScoreRing } from "@/components/ScoreRing";
+import { MediatorReport } from "@/components/MediatorReport";
 import { AGENTS, AgentKey, SEVERITY_META, overallScore, scoreColor } from "@/lib/types";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -215,6 +216,7 @@ export default function AnalysisDetail() {
           <Tabs defaultValue="findings" className="flex-1 flex flex-col">
             <TabsList className="m-3">
               <TabsTrigger value="findings">Findings</TabsTrigger>
+              <TabsTrigger value="debate">Debate</TabsTrigger>
               <TabsTrigger value="chat">Chat</TabsTrigger>
             </TabsList>
             <TabsContent value="findings" className="flex-1 m-0 overflow-y-auto scrollbar-thin px-3 pb-3 space-y-2">
@@ -248,6 +250,13 @@ export default function AnalysisDetail() {
                   </motion.div>
                 );
               })}
+            </TabsContent>
+            <TabsContent value="debate" className="flex-1 m-0 overflow-y-auto scrollbar-thin px-3 pb-3">
+              {analysis.mediator_report ? (
+                <MediatorReport report={analysis.mediator_report} />
+              ) : (
+                <p className="text-sm text-muted-foreground px-1 py-4">Debate report will appear when analysis completes.</p>
+              )}
             </TabsContent>
             <TabsContent value="chat" className="flex-1 m-0 flex flex-col">
               <ChatPanel analysisId={analysis.id} enabled={analysis.status === "ready"} />
