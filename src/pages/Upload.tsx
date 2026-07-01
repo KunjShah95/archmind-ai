@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { api, ApiError } from "@/lib/api";
 
 const MAX_BYTES = 25 * 1024 * 1024;
-const ACCEPT = ".png,.jpg,.jpeg,.pdf,.drawio,.excalidraw,.mmd,.puml,.svg,.json";
+const ACCEPT = ".png,.jpg,.jpeg,.pdf,.drawio,.excalidraw,.mmd,.puml,.svg,.json,.tf,.yaml,.yml,.sql";
 
 export default function Upload() {
   const navigate = useNavigate();
@@ -122,9 +122,9 @@ export default function Upload() {
             <div className="mx-auto h-14 w-14 rounded-xl bg-gradient-primary grid place-items-center shadow-glow">
               <UploadCloud className="h-7 w-7 text-primary-foreground" />
             </div>
-            <h3 className="mt-5 font-display text-xl font-semibold">Drop your diagram here</h3>
+            <h3 className="mt-5 font-display text-xl font-semibold">Drop your architecture or config file here</h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              PNG, JPG, PDF, Draw.io, Excalidraw, Mermaid, PlantUML, Lucidchart, Figma export
+              PNG, JPG, Draw.io, Excalidraw, Mermaid, Terraform (.tf), Kubernetes/Docker Compose (.yaml), OpenAPI (.json/.yaml), SQL Schema (.sql)
             </p>
             <div className="mt-5">
               <input

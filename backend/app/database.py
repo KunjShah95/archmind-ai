@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from pathlib import Path
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
@@ -10,6 +11,16 @@ settings = get_settings()
 connect_args = {"check_same_thread": False} if settings.database_url.startswith("sqlite") else {}
 engine = create_engine(settings.database_url, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# backend/ root — holds alembic.ini and the alembic/ package.
+BACKEND_ROOT = Path(__file__).resolve().parent.parent
+
+if settings.database_url.startswith("sqlite"):
+    @event.listens_for(engine, "connect")
+    def set_sqlite_pragma(dbapi_conn, _):
+        cursor = dbapi_conn.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
 
 
 class Base(DeclarativeBase):
@@ -25,13 +36,15 @@ def get_db() -> Generator[Session, None, None]:
 
 
 def init_db() -> None:
-    from app import models  # noqa: F401
+    """Bring the database schema up to date by running Alembic migrations.
 
-    Base.metadata.create_all(bind=engine)
+    Alembic is the sole schema authority — models must never be applied via
+    create_all(). New model changes require a migration
+    (`alembic revision --autogenerate`) which this upgrades to head on boot.
+    """
+    from alembic import command
+    from alembic.config import Config
 
-    if settings.database_url.startswith("sqlite"):
-        @event.listens_for(engine, "connect")
-        def set_sqlite_pragma(dbapi_conn, _):
-            cursor = dbapi_conn.cursor()
-            cursor.execute("PRAGMA foreign_keys=ON")
-            cursor.close()
+    alembic_cfg = Config(str(BACKEND_ROOT / "alembic.ini"))
+    alembic_cfg.set_main_option("script_location", str(BACKEND_ROOT / "alembic"))
+    command.upgrade(alembic_cfg, "head")

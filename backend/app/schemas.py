@@ -178,3 +178,23 @@ class ArchitectureWalkthrough(BaseModel):
     components: list[ComponentExplanation]
     connections: list[dict[str, str]]
 
+
+# ── Phase 2: Simulation & Debate ──
+
+class ChaosRequest(BaseModel):
+    failed_node_id: str
+
+
+class DebateRequest(BaseModel):
+    topic: str
+
+
+# ── Phase 4: Pair Architect ──
+
+class PairArchitectRequest(BaseModel):
+    current_mermaid: str | None = None
+    history: list[dict[str, Any]] = []
+    new_message: str
+
+
+

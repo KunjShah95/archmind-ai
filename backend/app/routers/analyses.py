@@ -20,6 +20,9 @@ from app.schemas import (
     RedesignResult,
     ComponentExplanation,
     ArchitectureWalkthrough,
+    ChaosRequest,
+    DebateRequest,
+    PairArchitectRequest,
 )
 from app.services.agents import (
     AGENT_KEYS, AGENT_NAMES, AGENT_DESCRIPTIONS, AGENT_ACCENTS,
@@ -36,6 +39,16 @@ from app.services.pipeline import (
 from app.services.generator import generate_architecture, architecture_to_graph
 from app.services.redesign import redesign_architecture, STRATEGIES
 from app.services.learning import explain_component, explain_architecture
+from app.services.simulation import simulate_traffic
+from app.services.chaos import simulate_failure
+from app.services.knowledge_graph import get_node_dependencies, compute_impact_matrix
+from app.services.debate import run_debate
+from app.services.benchmarks import benchmark_architecture
+from app.services.cicd import process_github_pr_webhook
+from app.services.cloud_scanner import scan_live_infrastructure, compare_actual_vs_intended
+from app.services.finops import calculate_finops_projections
+from app.services.compliance import audit_compliance_frameworks
+from app.services.pair_architect import run_pair_architect
 from app.config import get_settings
 
 router = APIRouter(prefix="/api/analyses", tags=["analyses"])
@@ -479,3 +492,183 @@ def get_component_explanation(
         raise HTTPException(status_code=404, detail=f"Node '{node_id}' not found in this analysis")
 
     return explain_component(node_id, nodes, a.diagram_edges or [])
+
+
+# ── Phase 2: Traffic Simulation ──
+
+@router.post("/{analysis_id}/simulate")
+def run_traffic_simulation(
+    analysis_id: str,
+    user: Annotated[Profile, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Run traffic simulations for 1K, 100K, 1M, 10M, and 100M users."""
+    a = db.get(Analysis, analysis_id)
+    if not a or not _user_can_access(db, user.id, a):
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    return simulate_traffic(a.diagram_nodes or [], a.diagram_edges or [])
+
+
+# ── Phase 2: Failure Simulator ──
+
+@router.post("/{analysis_id}/chaos")
+def run_failure_simulation(
+    analysis_id: str,
+    body: ChaosRequest,
+    user: Annotated[Profile, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Simulate the failure of a specific component and calculate blast radius."""
+    a = db.get(Analysis, analysis_id)
+    if not a or not _user_can_access(db, user.id, a):
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    nodes = a.diagram_nodes or []
+    node_ids = {n["id"] for n in nodes}
+    if body.failed_node_id not in node_ids:
+        raise HTTPException(status_code=404, detail=f"Node '{body.failed_node_id}' not found in this analysis")
+
+    return simulate_failure(nodes, a.diagram_edges or [], body.failed_node_id)
+
+
+# ── Phase 2: Knowledge Graph ──
+
+@router.get("/{analysis_id}/graph/dependencies/{node_id}")
+def get_node_deps(
+    analysis_id: str,
+    node_id: str,
+    user: Annotated[Profile, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Get upstream and downstream dependency lists for a given node."""
+    a = db.get(Analysis, analysis_id)
+    if not a or not _user_can_access(db, user.id, a):
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    nodes = a.diagram_nodes or []
+    node_ids = {n["id"] for n in nodes}
+    if node_id not in node_ids:
+        raise HTTPException(status_code=404, detail=f"Node '{node_id}' not found in this analysis")
+
+    return get_node_dependencies(nodes, a.diagram_edges or [], node_id)
+
+
+@router.get("/{analysis_id}/graph/impact")
+def get_graph_impact_matrix(
+    analysis_id: str,
+    user: Annotated[Profile, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Calculate centrality metrics and impact scores for all nodes."""
+    a = db.get(Analysis, analysis_id)
+    if not a or not _user_can_access(db, user.id, a):
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    return compute_impact_matrix(a.diagram_nodes or [], a.diagram_edges or [])
+
+
+# ── Phase 2: Multi-Agent Debate ──
+
+@router.post("/{analysis_id}/debate")
+def debate_topic(
+    analysis_id: str,
+    body: DebateRequest,
+    user: Annotated[Profile, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Simulate a debate between 4 agents about a design dilemma."""
+    a = db.get(Analysis, analysis_id)
+    if not a or not _user_can_access(db, user.id, a):
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    return run_debate(body.topic, a.diagram_nodes or [])
+
+
+# ── Phase 2: Architecture Benchmarks ──
+
+@router.post("/{analysis_id}/benchmark")
+def run_architecture_benchmark(
+    analysis_id: str,
+    user: Annotated[Profile, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Compare architecture against industry standard large-scale system patterns."""
+    a = db.get(Analysis, analysis_id)
+    if not a or not _user_can_access(db, user.id, a):
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    return benchmark_architecture(a.diagram_nodes or [], a.diagram_edges or [])
+
+
+# ── Phase 3: CI/CD PR Review Webhook ──
+
+@router.post("/integrations/webhook/github")
+def github_pr_webhook(payload: dict):
+    """Exposes a webhook receiver for GitHub pull requests to automatically review code changes."""
+    return process_github_pr_webhook(payload)
+
+
+# ── Phase 4: Live Cloud Integration ──
+
+@router.post("/{analysis_id}/cloud/scan")
+def scan_cloud_drift(
+    analysis_id: str,
+    provider: str,
+    user: Annotated[Profile, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Scan live cloud resource configuration details and map them to design templates."""
+    a = db.get(Analysis, analysis_id)
+    if not a or not _user_can_access(db, user.id, a):
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    actual = scan_live_infrastructure(provider, {})
+    return compare_actual_vs_intended(a.diagram_nodes or [], a.diagram_edges or [], actual)
+
+
+# ── Phase 4: FinOps Cost optimization ──
+
+@router.get("/{analysis_id}/finops")
+def get_finops_analysis(
+    analysis_id: str,
+    user: Annotated[Profile, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Get FinOps cost projections and rightsizing recommendations."""
+    a = db.get(Analysis, analysis_id)
+    if not a or not _user_can_access(db, user.id, a):
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    return calculate_finops_projections(a.diagram_nodes or [], a.diagram_edges or [])
+
+
+# ── Phase 4: Compliance Audits ──
+
+@router.get("/{analysis_id}/compliance")
+def get_compliance_audit(
+    analysis_id: str,
+    user: Annotated[Profile, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Get compliance readiness evaluations for SOC 2, ISO, GDPR, HIPAA, and PCI DSS."""
+    a = db.get(Analysis, analysis_id)
+    if not a or not _user_can_access(db, user.id, a):
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    return audit_compliance_frameworks(a.diagram_nodes or [], a.diagram_edges or [])
+
+
+# ── Phase 4: AI Pair Architect ──
+
+@router.post("/pair-architect")
+def co_design_session(
+    body: PairArchitectRequest,
+    user: Annotated[Profile, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Co-design systems iteratively with the AI Pair Architect."""
+    return run_pair_architect(body.current_mermaid, body.history, body.new_message)
+
+
+

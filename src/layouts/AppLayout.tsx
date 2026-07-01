@@ -2,6 +2,8 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Upload as UploadIcon, FolderKanban, GitCompare,
   Users, Settings as Cog, CreditCard, Search, ChevronDown, Menu,
+  Sparkles, RefreshCw, Activity, Flame, MessageSquare, Award, GitPullRequest,
+  Bot, DollarSign, ShieldAlert, Cloud
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { cn } from "@/lib/utils";
@@ -19,12 +21,50 @@ import {
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const NAV = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/upload", label: "New Analysis", icon: UploadIcon },
-  { to: "/analyses", label: "Analyses", icon: FolderKanban },
-  { to: "/compare", label: "Compare", icon: GitCompare },
-  { to: "/workspaces", label: "Workspaces", icon: Users },
+type NavItem = { to: string; label: string; icon: any };
+type NavSection = { title: string; items: NavItem[] };
+
+const NAV_SECTIONS: NavSection[] = [
+  {
+    title: "Create",
+    items: [
+      { to: "/generate", label: "Generate Architecture", icon: Sparkles },
+      { to: "/pair-architect", label: "AI Pair Architect", icon: Bot },
+      { to: "/upload", label: "New Analysis", icon: UploadIcon },
+    ],
+  },
+  {
+    title: "Review",
+    items: [
+      { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { to: "/analyses", label: "Analyses", icon: FolderKanban },
+      { to: "/compare", label: "Compare", icon: GitCompare },
+      { to: "/benchmarks", label: "Benchmarks", icon: Award },
+    ],
+  },
+  {
+    title: "Simulate",
+    items: [
+      { to: "/simulate", label: "Traffic Simulation", icon: Activity },
+      { to: "/chaos", label: "Chaos Simulator", icon: Flame },
+      { to: "/debate", label: "Multi-Agent Debate", icon: MessageSquare },
+    ],
+  },
+  {
+    title: "Optimize",
+    items: [
+      { to: "/finops", label: "FinOps cost optimizer", icon: DollarSign },
+      { to: "/compliance", label: "Compliance check", icon: ShieldAlert },
+    ],
+  },
+  {
+    title: "Team",
+    items: [
+      { to: "/workspaces", label: "Workspaces", icon: Users },
+      { to: "/integrations", label: "CI/CD Webhooks", icon: GitPullRequest },
+      { to: "/cloud", label: "Live Cloud sync", icon: Cloud },
+    ],
+  },
 ];
 
 const SECONDARY = [
@@ -60,7 +100,12 @@ export default function AppLayout() {
 
   const NavLinks = ({ onNavigate }: { onNavigate?: () => void }) => (
     <>
-      {NAV.map((i) => <NavItem key={i.to} {...i} onClick={onNavigate} />)}
+      {NAV_SECTIONS.map((section) => (
+        <div key={section.title}>
+          <div className="px-3 pt-4 pb-1.5 text-[11px] uppercase tracking-wider text-muted-foreground font-medium">{section.title}</div>
+          {section.items.map((i) => <NavItem key={i.to} {...i} onClick={onNavigate} />)}
+        </div>
+      ))}
       <div className="px-3 pt-6 pb-2 text-[11px] uppercase tracking-wider text-muted-foreground">Account</div>
       {SECONDARY.map((i) => <NavItem key={i.to} {...i} onClick={onNavigate} />)}
     </>

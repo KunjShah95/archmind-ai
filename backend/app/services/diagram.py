@@ -34,15 +34,31 @@ def detect_diagram_type(content: str | None, filename: str | None) -> str:
             "png": "PNG", "jpg": "JPG", "jpeg": "JPG", "pdf": "PDF",
             "drawio": "Draw.io", "excalidraw": "Excalidraw", "mmd": "Mermaid",
             "puml": "PlantUML", "svg": "SVG", "json": "JSON",
+            "tf": "Terraform", "sql": "SQL Schema",
         }
         if ext in mapping:
             return mapping[ext]
+        if ext in ["yaml", "yml"]:
+            # Default to YAML, content check will refine
+            return "YAML"
+            
     if content:
         c = content.strip().lower()
         if c.startswith("graph ") or "graph td" in c or "graph lr" in c:
             return "Mermaid"
         if c.startswith("@startuml"):
             return "PlantUML"
+        if "apiversion:" in c and "kind:" in c:
+            return "Kubernetes"
+        if "openapi:" in c or "swagger:" in c:
+            return "OpenAPI"
+        if "services:" in c and ("version:" in c or "image:" in c):
+            return "Docker Compose"
+        if "resource " in c and "provider " in c:
+            return "Terraform"
+        if "create table" in c or "alter table" in c:
+            return "SQL Schema"
+            
     return "Architecture"
 
 

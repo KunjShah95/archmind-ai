@@ -1,5 +1,18 @@
 import { getStoredToken, setStoredToken } from "./supabase";
-import type { AgentKey, RedesignResult, RedesignStrategy, ComponentExplanation, ArchitectureWalkthrough, GeneratedArtifacts, MediatorReport } from "./types";
+import type {
+  AgentKey,
+  RedesignResult,
+  RedesignStrategy,
+  ComponentExplanation,
+  ArchitectureWalkthrough,
+  GeneratedArtifacts,
+  MediatorReport,
+  SimulationResult,
+  ChaosResult,
+  NodeImpact,
+  DebateResult,
+  BenchmarkResult
+} from "./types";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
@@ -232,6 +245,84 @@ export const api = {
 
   getComponentExplanation: (analysisId: string, nodeId: string) =>
     request<ComponentExplanation>(`/api/analyses/${analysisId}/learn/${encodeURIComponent(nodeId)}`),
+
+  // ── Phase 2: Traffic Simulation ──
+
+  simulateTraffic: (analysisId: string) =>
+    request<SimulationResult>(`/api/analyses/${analysisId}/simulate`, {
+      method: "POST",
+    }),
+
+  // ── Phase 2: Failure Simulator ──
+
+  simulateFailure: (analysisId: string, failedNodeId: string) =>
+    request<ChaosResult>(`/api/analyses/${analysisId}/chaos`, {
+      method: "POST",
+      body: JSON.stringify({ failed_node_id: failedNodeId }),
+    }),
+
+  // ── Phase 2: Knowledge Graph ──
+
+  getNodeDependencies: (analysisId: string, nodeId: string) =>
+    request<any>(`/api/analyses/${analysisId}/graph/dependencies/${encodeURIComponent(nodeId)}`),
+
+  getGraphImpactMatrix: (analysisId: string) =>
+    request<NodeImpact[]>(`/api/analyses/${analysisId}/graph/impact`),
+
+  // ── Phase 2: Multi-Agent Debate ──
+
+  runMultiAgentDebate: (analysisId: string, topic: string) =>
+    request<DebateResult>(`/api/analyses/${analysisId}/debate`, {
+      method: "POST",
+      body: JSON.stringify({ topic }),
+    }),
+
+  // ── Phase 2: Architecture Benchmarks ──
+
+  runArchitectureBenchmark: (analysisId: string) =>
+    request<BenchmarkResult>(`/api/analyses/${analysisId}/benchmark`, {
+      method: "POST",
+    }),
+
+  // ── Phase 3: CI/CD Webhook Review ──
+
+  githubPrWebhook: (payload: any) =>
+    request<any>("/api/analyses/integrations/webhook/github", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  // ── Phase 4: Live Cloud Integration ──
+
+  scanCloudDrift: (analysisId: string, provider: string) =>
+    request<any>(`/api/analyses/${analysisId}/cloud/scan?provider=${provider}`, {
+      method: "POST",
+    }),
+
+  // ── Phase 4: FinOps Cost Optimization ──
+
+  getFinOpsAnalysis: (analysisId: string) =>
+    request<any>(`/api/analyses/${analysisId}/finops`),
+
+  // ── Phase 4: Compliance Audits ──
+
+  getComplianceAudit: (analysisId: string) =>
+    request<any>(`/api/analyses/${analysisId}/compliance`),
+
+  // ── Phase 4: AI Pair Architect ──
+
+  runPairArchitectSession: (body: {
+    current_mermaid?: string | null;
+    history: any[];
+    new_message: string;
+  }) =>
+    request<any>("/api/analyses/pair-architect", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
 };
 
 export { setStoredToken };
+
+
+

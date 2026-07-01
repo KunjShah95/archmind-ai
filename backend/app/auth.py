@@ -89,6 +89,12 @@ def decode_token(token: str) -> dict:
 def get_or_create_profile(db: Session, user_id: str, email: str, full_name: str | None = None) -> Profile:
     profile = db.get(Profile, user_id)
     if profile:
+        # Update name if it's currently a default email-prefix name and we have a real name
+        default_name = email.split("@")[0].title()
+        if (not profile.full_name or profile.full_name == default_name) and full_name:
+            profile.full_name = full_name
+            db.commit()
+            db.refresh(profile)
         return profile
     profile = Profile(
         id=user_id,
@@ -153,7 +159,12 @@ def get_current_user(
     email = payload.get("email")
     if not user_id or not email:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
-    profile = get_or_create_profile(db, user_id, email)
+        
+    # Extract metadata details from Supabase JWT token
+    user_meta = payload.get("user_metadata", {})
+    full_name = user_meta.get("full_name") or user_meta.get("name") or payload.get("name")
+    
+    profile = get_or_create_profile(db, user_id, email, full_name)
     ensure_default_workspace(db, profile)
     return profile
 

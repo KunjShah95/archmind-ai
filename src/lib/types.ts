@@ -147,3 +147,79 @@ export type MediatorReport = {
   top_tensions: TopTension[];
 };
 
+// ── Phase 2: Simulation & Debate ──
+
+export type TrafficScaleResult = {
+  throughput_rps: number;
+  latency_p50_ms: number;
+  latency_p95_ms: number;
+  latency_p99_ms: number;
+  infra_cost_monthly_usd: number;
+  autoscaling_instances: number;
+  bottlenecks: string[];
+};
+
+export type SimulationResult = {
+  results: Record<string, TrafficScaleResult>;
+  summary: string;
+};
+
+export type CascadingFailure = {
+  node_id: string;
+  reason: string;
+};
+
+export type ChaosResult = {
+  failed_node_id: string;
+  blast_radius_node_ids: string[];
+  cascading_failures: CascadingFailure[];
+  recovery_time_estimation: string;
+  severity: "low" | "medium" | "high" | "critical";
+  mitigation_strategies: string[];
+  summary: string;
+};
+
+export type NodeImpact = {
+  node_id: string;
+  label: string;
+  impact_score: number;
+  degree_centrality: number;
+  in_degree: number;
+  out_degree: number;
+  affected_count: number;
+};
+
+export type DebateTurn = {
+  agent: string;
+  argument: string;
+};
+
+export type TradeOffMatrix = {
+  option: string;
+  pros: string[];
+  cons: string[];
+};
+
+export type DebateResult = {
+  topic: string;
+  debate_transcript: DebateTurn[];
+  consensus_recommendation: string;
+  trade_off_matrix: TradeOffMatrix[];
+};
+
+export type PatternEvaluation = {
+  pattern_key: string;
+  pattern_name: string;
+  similarity_score_pct: number;
+  matched_features: string[];
+  missing_features: string[];
+  analysis: string;
+};
+
+export type BenchmarkResult = {
+  overall_similarity_pct: number;
+  pattern_evaluations: PatternEvaluation[];
+  key_recommendation: string;
+};
+
+

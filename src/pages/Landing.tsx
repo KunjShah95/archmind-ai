@@ -124,25 +124,26 @@ function Hero() {
         >
           <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1 text-xs">
             <Sparkles className="h-3.5 w-3.5 text-primary" />
-            <span className="text-muted-foreground">Specialized agents · Multi-format input · Production-ready</span>
+            <span className="text-muted-foreground">Design · Review · Optimize · Simulate · Deploy</span>
           </div>
           <h1 className="mt-6 font-display text-5xl md:text-7xl font-semibold tracking-tight leading-[1.05]">
-            Architecture reviews,
+            The AI Staff Architect
             <br />
-            <span className="gradient-text">on autopilot.</span>
+            <span className="gradient-text">for your team.</span>
           </h1>
           <p className="mt-6 text-lg md:text-xl text-muted-foreground max-w-2xl leading-relaxed">
-            Drop in any diagram — Mermaid, Excalidraw, Draw.io, PlantUML, Figma, even a screenshot —
-            and get expert-level analysis from seven specialized AI agents in minutes.
+            Design, review, optimize, and simulate production architectures with AI.
+            Generate from a prompt, review any diagram, redesign with one click, and
+            get expert analysis from seven specialized AI agents.
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-3">
             <Link to="/signup">
               <Button size="lg" className="h-12 px-6 bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow">
-                Start analyzing free <ArrowRight className="ml-1.5 h-4 w-4" />
+                Start building free <ArrowRight className="ml-1.5 h-4 w-4" />
               </Button>
             </Link>
-            <Link to="/dashboard">
-              <Button size="lg" variant="outline" className="h-12 px-6">View live demo</Button>
+            <Link to="/generate">
+              <Button size="lg" variant="outline" className="h-12 px-6">Generate an architecture</Button>
             </Link>
           </div>
           <div className="mt-6 flex items-center gap-5 text-xs text-muted-foreground">
