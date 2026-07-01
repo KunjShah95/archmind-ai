@@ -69,6 +69,11 @@ class Analysis(Base):
     scores: Mapped[dict] = mapped_column(JSON, default=dict)
     diagram_nodes: Mapped[list] = mapped_column(JSON, default=list)
     diagram_edges: Mapped[list] = mapped_column(JSON, default=list)
+    # Phase 1: Generator / Redesign / Pair Architect support
+    analysis_mode: Mapped[str] = mapped_column(String(32), default="review")
+    generation_prompt: Mapped[str | None] = mapped_column(Text, nullable=True)
+    generated_artifacts: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    mediator_report: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 

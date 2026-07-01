@@ -75,6 +75,10 @@ class AnalysisDetail(AnalysisSummary):
     diagram_nodes: list[dict[str, Any]]
     diagram_edges: list[dict[str, Any]]
     findings: list[FindingOut]
+    analysis_mode: str = "review"
+    generation_prompt: str | None = None
+    generated_artifacts: dict[str, Any] | None = None
+    mediator_report: dict[str, Any] | None = None
 
 
 class CreateAnalysisBody(BaseModel):
@@ -116,3 +120,61 @@ class DashboardStats(BaseModel):
     analyses_used: int
     analyses_limit: int
     plan: str
+
+
+# ── Phase 1: Generator ──
+
+class GenerateRequest(BaseModel):
+    prompt: str = Field(min_length=10, max_length=4000)
+    target_users: str | None = None
+    cloud_provider: str | None = None
+    constraints: dict[str, Any] | None = None
+
+
+class GeneratedArchitecture(BaseModel):
+    diagram_mermaid: str
+    tech_stack: dict[str, Any]
+    database_choices: list[dict[str, Any]]
+    api_design: dict[str, Any]
+    queue_system: dict[str, Any]
+    cdn_strategy: dict[str, Any]
+    kubernetes_manifest: str
+    terraform_starter: str
+
+
+# ── Phase 1: Redesign ──
+
+class RedesignRequest(BaseModel):
+    strategy: str = Field(
+        description="One of: cost_optimized, performance_optimized, high_availability, enterprise_scale, startup_mvp, multi_region"
+    )
+
+
+class RedesignResult(BaseModel):
+    strategy: str
+    original_nodes: list[dict[str, Any]]
+    original_edges: list[dict[str, Any]]
+    redesigned_nodes: list[dict[str, Any]]
+    redesigned_edges: list[dict[str, Any]]
+    changes: list[dict[str, str]]
+    trade_offs: list[dict[str, str]]
+    summary: str
+
+
+# ── Phase 1: Learning Mode ──
+
+class ComponentExplanation(BaseModel):
+    component: str
+    what_it_does: str
+    why_used: str
+    alternatives: list[dict[str, str]]
+    best_practices: list[str]
+    common_mistakes: list[str]
+
+
+class ArchitectureWalkthrough(BaseModel):
+    title: str
+    summary: str
+    components: list[ComponentExplanation]
+    connections: list[dict[str, str]]
+
