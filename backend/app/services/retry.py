@@ -1,4 +1,4 @@
-﻿"""
+"""
 Retry logic and dead-letter queue for failed analyses.
 """
 
