@@ -1,12 +1,13 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.auth import create_access_token, get_current_user, get_or_create_profile
 from app.config import get_settings
 from app.database import get_db
+from app.limiter import limiter
 from app.models import Profile
 from app.schemas import AuthResponse, DemoLoginRequest, ProfileOut
 
@@ -20,7 +21,8 @@ def me(user: Annotated[Profile, Depends(get_current_user)]):
 
 
 @router.post("/demo-login", response_model=AuthResponse)
-def demo_login(body: DemoLoginRequest, db: Annotated[Session, Depends(get_db)]):
+@limiter.limit("10/minute")
+def demo_login(request: Request, body: DemoLoginRequest, db: Annotated[Session, Depends(get_db)]):
     # Demo login bypasses password verification entirely, so it must never be
     # reachable outside local development regardless of other settings.
     if not settings.dev_mode:

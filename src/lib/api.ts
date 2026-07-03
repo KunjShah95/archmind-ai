@@ -129,6 +129,34 @@ export type WorkspaceMember = {
   role: string;
 };
 
+export type AuditEvent = {
+  id: string;
+  actor: string;
+  actor_email: string;
+  action: string;
+  entity_type: string;
+  entity_id: string;
+  metadata: Record<string, string> | null;
+  created_at: string;
+};
+
+export type AnalysisVersion = {
+  id: string;
+  version_no: number;
+  change_type: string;
+  summary: string;
+  author: string;
+  author_id: string;
+  created_at: string;
+  scores: Record<string, number>;
+};
+
+export type ShareLink = {
+  token: string;
+  url: string;
+  scope: string;
+};
+
 export type ChatMessage = {
   id: string;
   role: "user" | "assistant";
@@ -221,8 +249,41 @@ export const api = {
 
   listWorkspaces: () => request<Workspace[]>("/api/workspaces"),
 
+  getWorkspace: (workspaceId: string) =>
+    request<Workspace>(`/api/workspaces/${workspaceId}`),
+
   listMembers: (workspaceId: string) =>
     request<WorkspaceMember[]>(`/api/workspaces/${workspaceId}/members`),
+
+  inviteMember: (workspaceId: string, email: string, role: string) =>
+    request<{ status: string; email: string; role: string }>(`/api/workspaces/${workspaceId}/invites`, {
+      method: "POST",
+      body: JSON.stringify({ email, role }),
+    }),
+
+  updateMemberRole: (workspaceId: string, memberId: string, role: string) =>
+    request<{ status: string; role: string }>(`/api/workspaces/${workspaceId}/members/${memberId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ role }),
+    }),
+
+  removeMember: (workspaceId: string, memberId: string) =>
+    request<void>(`/api/workspaces/${workspaceId}/members/${memberId}`, { method: "DELETE" }),
+
+  getWorkspaceActivity: (workspaceId: string) =>
+    request<AuditEvent[]>(`/api/workspaces/${workspaceId}/activity`),
+
+  getAuditTrail: (analysisId: string) =>
+    request<AuditEvent[]>(`/api/analyses/${analysisId}/audit`),
+
+  getVersionHistory: (analysisId: string) =>
+    request<AnalysisVersion[]>(`/api/analyses/${analysisId}/versions`),
+
+  createShareLink: (analysisId: string) =>
+    request<ShareLink>(`/api/analyses/${analysisId}/share`, { method: "POST" }),
+
+  getSharedAnalysis: (token: string) =>
+    request<AnalysisDetail>(`/api/analyses/shared/${token}`),
 
   // ── Phase 1: Generator ──
 

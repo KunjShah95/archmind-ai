@@ -1,33 +1,29 @@
+version: "3.9"
 services:
-  api:
-    build: ./backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql://archmind:archmind@db:5432/archmind
-      CORS_ORIGINS: http://localhost:8080,http://127.0.0.1:8080
-      DEV_MODE: "true"
+      - DATABASE_URL=${DATABASE_URL:-sqlite:///./archmind.db}
+      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET:-dev-secret}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:5173}
     volumes:
       - ./backend/uploads:/app/uploads
-    depends_on:
-      db:
-        condition: service_healthy
-
-  db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: archmind
-      POSTGRES_PASSWORD: archmind
-      POSTGRES_DB: archmind
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U archmind"]
-      interval: 5s
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 30s
       timeout: 5s
-      retries: 5
+      retries: 3
 
-volumes:
-  pgdata:
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy

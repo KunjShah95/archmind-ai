@@ -13,3 +13,5 @@ pytest==8.2.2
 pytest-cov==6.0.0
 freezegun==1.5.1
 structlog==24.4.0
+prometheus-fastapi-instrumentator==6.1.0
+slowapi==0.1.9

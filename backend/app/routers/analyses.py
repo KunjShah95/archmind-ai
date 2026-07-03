@@ -1,16 +1,19 @@
 import json
+import secrets
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import Response
 from sqlalchemy.orm import Session, joinedload
 
 from app.auth import get_current_user
 from app.database import get_db
-from app.models import Analysis, ChatMessage, Finding, Profile, WorkspaceMember
+from app.limiter import limiter
+from app.models import Analysis, ChatMessage, Finding, Profile, ShareLink, WorkspaceMember
 from app.schemas import (
     AnalysisDetail,
     AnalysisSummary,
+    AuditEventOut,
     ChatMessageOut,
     ChatRequest,
     CreateAnalysisBody,
@@ -23,6 +26,8 @@ from app.schemas import (
     ChaosRequest,
     DebateRequest,
     PairArchitectRequest,
+    ShareLinkOut,
+    VersionOut,
 )
 from app.services.agents import (
     AGENT_KEYS, AGENT_NAMES, AGENT_DESCRIPTIONS, AGENT_ACCENTS,
@@ -121,7 +126,9 @@ def get_analysis(
 
 
 @router.post("", response_model=AnalysisSummary)
+@limiter.limit("20/minute")
 def create_analysis_json(
+    request: Request,
     body: CreateAnalysisBody,
     background_tasks: BackgroundTasks,
     user: Annotated[Profile, Depends(get_current_user)],
@@ -736,6 +743,198 @@ def co_design_session(
 ):
     """Co-design systems iteratively with the AI Pair Architect."""
     return run_pair_architect(body.current_mermaid, body.history, body.new_message)
+
+
+# ── Phase 3B: Audit Trail ──
+
+@router.get("/{analysis_id}/audit", response_model=list[AuditEventOut])
+def get_audit_trail(
+    analysis_id: str,
+    user: Annotated[Profile, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    a = db.get(Analysis, analysis_id)
+    if not a or not _user_can_access(db, user.id, a):
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    author = db.query(Profile).filter(Profile.id == a.author_id).first()
+    actor_name = author.full_name or author.email if author else "Unknown"
+    actor_email = author.email if author else ""
+    events: list[AuditEventOut] = [
+        AuditEventOut(
+            id=f"create-{a.id}",
+            actor=actor_name,
+            actor_email=actor_email,
+            action="analysis.created",
+            entity_type="analysis",
+            entity_id=a.id,
+            metadata={"name": a.name, "source_type": a.source_type},
+            created_at=a.created_at,
+        )
+    ]
+    if a.status == "ready":
+        events.append(AuditEventOut(
+            id=f"ready-{a.id}",
+            actor="ArchMind AI",
+            actor_email="ai@archmind.io",
+            action="analysis.completed",
+            entity_type="analysis",
+            entity_id=a.id,
+            metadata={"score_keys": list((a.scores or {}).keys())},
+            created_at=a.updated_at,
+        ))
+    findings = db.query(Finding).filter(Finding.analysis_id == a.id).all()
+    for f in findings[:10]:
+        events.append(AuditEventOut(
+            id=f"finding-{f.id}",
+            actor="ArchMind AI",
+            actor_email="ai@archmind.io",
+            action="finding.created",
+            entity_type="finding",
+            entity_id=f.id,
+            metadata={"title": f.title, "severity": f.severity, "agent": f.agent},
+            created_at=a.updated_at,
+        ))
+    events.sort(key=lambda e: e.created_at, reverse=True)
+    return events
+
+
+# ── Phase 3B: Version History ──
+
+@router.get("/{analysis_id}/versions", response_model=list[VersionOut])
+def get_versions(
+    analysis_id: str,
+    user: Annotated[Profile, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    a = db.get(Analysis, analysis_id)
+    if not a or not _user_can_access(db, user.id, a):
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    author = db.query(Profile).filter(Profile.id == a.author_id).first()
+    versions = [
+        VersionOut(
+            id=f"v1-{a.id}",
+            version_no=1,
+            change_type="initial",
+            summary="Initial analysis created",
+            author=author.full_name or author.email if author else "Unknown",
+            author_id=a.author_id,
+            created_at=a.created_at,
+            scores={},
+        )
+    ]
+    if a.status == "ready":
+        versions.append(VersionOut(
+            id=f"v2-{a.id}",
+            version_no=2,
+            change_type="analysis_complete",
+            summary="Analysis pipeline completed — scores and findings generated",
+            author="ArchMind AI",
+            author_id="system",
+            created_at=a.updated_at,
+            scores=a.scores or {},
+        ))
+    versions.sort(key=lambda v: v.version_no, reverse=True)
+    return versions
+
+
+# ── Phase 3B: Share Link ──
+
+@router.post("/{analysis_id}/share", response_model=ShareLinkOut)
+def create_share_link(
+    analysis_id: str,
+    user: Annotated[Profile, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    a = db.get(Analysis, analysis_id)
+    if not a or not _user_can_access(db, user.id, a):
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    token = secrets.token_urlsafe(24)
+    link = ShareLink(analysis_id=analysis_id, token=token, scope="read", created_by=user.id)
+    db.add(link)
+    db.commit()
+    db.refresh(link)
+    return ShareLinkOut(token=link.token, url=f"/shared/{link.token}", scope=link.scope)
+
+
+@router.get("/shared/{token}")
+def get_shared_analysis(token: str, db: Annotated[Session, Depends(get_db)]):
+    link = db.query(ShareLink).filter(ShareLink.token == token).first()
+    if not link:
+        raise HTTPException(status_code=404, detail="Share link not found or expired")
+    a = db.query(Analysis).options(
+        joinedload(Analysis.findings),
+        joinedload(Analysis.workspace),
+        joinedload(Analysis.author),
+    ).filter(Analysis.id == link.analysis_id).first()
+    if not a:
+        raise HTTPException(status_code=404, detail="Analysis not found")
+    ws = a.workspace
+    author = a.author
+    return {
+        "id": a.id,
+        "name": a.name,
+        "diagram_type": a.diagram_type,
+        "status": a.status,
+        "scores": a.scores or {},
+        "workspace": ws.name if ws else "Unknown",
+        "author": author.full_name or author.email if author else "Unknown",
+        "uploaded_at": a.created_at.isoformat(),
+        "diagram_nodes": a.diagram_nodes or [],
+        "diagram_edges": a.diagram_edges or [],
+        "findings": [
+            {
+                "id": f.id, "agent": f.agent, "severity": f.severity,
+                "title": f.title, "summary": f.summary, "recommendation": f.recommendation,
+            }
+            for f in (a.findings or [])
+        ],
+        "mediator_report": a.mediator_report,
+    }
+
+
+# ── Phase 3B: Retry & Status ──
+
+@router.post("/{analysis_id}/retry", response_model=AnalysisSummary)
+def retry_analysis(
+    analysis_id: str,
+    background_tasks: BackgroundTasks,
+    user: Annotated[Profile, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    a = db.get(Analysis, analysis_id)
+    if not a or not _user_can_access(db, user.id, a):
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    a.status = "queued"
+    a.error_code = None
+    a.error_message = None
+    a.failed_step = None
+    db.commit()
+
+    background_tasks.add_task(_run_pipeline_task, analysis_id)
+    return _to_summary(a, db)
+
+
+@router.get("/{analysis_id}/status")
+def get_analysis_status(
+    analysis_id: str,
+    user: Annotated[Profile, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    a = db.get(Analysis, analysis_id)
+    if not a or not _user_can_access(db, user.id, a):
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    return {
+        "id": a.id,
+        "status": a.status,
+        "error_code": a.error_code,
+        "error_message": a.error_message,
+        "failed_step": a.failed_step,
+    }
 
 
 

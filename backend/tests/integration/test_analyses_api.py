@@ -184,6 +184,37 @@ class TestAnalysisStatus:
         assert resp.json()["status"] == "analyzing"
 
 
+class TestFixtures:
+    def test_fixtures_work(self, client, auth_user, seed_workspace):
+        """Explicitly verify that the fixtures work as expected.
+        
+        This test ensures:
+        - The client fixture can make requests.
+        - The auth_user fixture provides a valid token and workspace.
+        - The seed_workspace fixture creates a second workspace.
+        """
+        profile, token, ws = auth_user
+        ws2, other = seed_workspace
+
+        # Verify client and auth_user work
+        resp = client.post(
+            "/api/analyses",
+            json={
+                "name": "Fixture Test",
+                "source_type": "paste",
+                "source_content": "graph TB\nA-->B",
+            },
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["workspace_id"] == ws.id
+
+        # Verify seed_workspace works
+        assert ws2.id != ws.id
+        assert other.id != profile.id
+
+
 class TestAnalysisQuota:
     def test_quota_decremented_on_quota_success(self, client, db, auth_user):
         profile, token, ws = auth_user

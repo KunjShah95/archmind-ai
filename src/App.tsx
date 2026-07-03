@@ -37,6 +37,12 @@ import LiveCloud from "./pages/Cloud";
 import FinOps from "./pages/FinOps";
 import Compliance from "./pages/Compliance";
 import PairArchitect from "./pages/PairArchitect";
+import WorkspaceDetail from "./pages/WorkspaceDetail";
+import ActivityFeed from "./pages/ActivityFeed";
+import VersionHistory from "./pages/VersionHistory";
+import AuditTrail from "./pages/AuditTrail";
+import SharedAnalysis from "./pages/SharedAnalysis";
+import ReportBuilder from "./pages/ReportBuilder";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient({
@@ -97,7 +103,15 @@ const App = () => (
               <Route path="/finops" element={<FinOps />} />
               <Route path="/compliance" element={<Compliance />} />
               <Route path="/pair-architect" element={<PairArchitect />} />
+
+              {/* Phase 3B Routes */}
+              <Route path="/workspaces/:wsId" element={<WorkspaceDetail />} />
+              <Route path="/workspaces/:wsId/activity" element={<ActivityFeed />} />
+              <Route path="/analyses/:id/history" element={<VersionHistory />} />
+              <Route path="/analyses/:id/audit" element={<AuditTrail />} />
+              <Route path="/analyses/:id/report-builder" element={<ReportBuilder />} />
             </Route>
+            <Route path="/shared/:token" element={<SharedAnalysis />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

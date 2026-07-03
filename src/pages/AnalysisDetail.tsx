@@ -247,7 +247,17 @@ export default function AnalysisDetail() {
             {sendingSlack ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Slack className="h-3.5 w-3.5 mr-1.5" />}
             Send to Slack
           </Button>
-          <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success("Link copied"); }}>
+          <Button variant="outline" size="sm" onClick={async () => {
+            try {
+              const link = await api.createShareLink(analysis.id);
+              const url = `${window.location.origin}${link.url}`;
+              await navigator.clipboard.writeText(url);
+              toast.success("Share link copied to clipboard");
+            } catch {
+              navigator.clipboard.writeText(window.location.href);
+              toast.success("Link copied");
+            }
+          }}>
             <Share2 className="h-3.5 w-3.5 mr-1.5" /> Share
           </Button>
           <DropdownMenu>
@@ -277,6 +287,15 @@ export default function AnalysisDetail() {
           </Button>
           <Button asChild variant="outline" size="sm">
             <Link to={`/analyses/${analysis.id}/heatmap`}><Flame className="h-3.5 w-3.5 mr-1.5" /> Heatmap</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link to={`/analyses/${analysis.id}/report-builder`}><Download className="h-3.5 w-3.5 mr-1.5" /> Report Builder</Link>
+          </Button>
+          <Button asChild variant="ghost" size="sm">
+            <Link to={`/analyses/${analysis.id}/history`}><Scale className="h-3.5 w-3.5 mr-1.5" /> History</Link>
+          </Button>
+          <Button asChild variant="ghost" size="sm">
+            <Link to={`/analyses/${analysis.id}/audit`}><ShieldCheck className="h-3.5 w-3.5 mr-1.5" /> Audit</Link>
           </Button>
           <Button size="sm" className="bg-gradient-primary text-primary-foreground hover:opacity-90" onClick={() => refetch()}>
             <Sparkles className="h-3.5 w-3.5 mr-1.5" /> Refresh

@@ -197,6 +197,45 @@ class PairArchitectRequest(BaseModel):
     new_message: str
 
 
+# ── Phase 3B: Collaboration ──
+
+class InviteMemberRequest(BaseModel):
+    email: str
+    role: str = "editor"
+
+
+class UpdateMemberRoleRequest(BaseModel):
+    role: str
+
+
+class AuditEventOut(BaseModel):
+    id: str
+    actor: str
+    actor_email: str
+    action: str
+    entity_type: str
+    entity_id: str
+    metadata: dict[str, Any] | None = None
+    created_at: datetime
+
+
+class VersionOut(BaseModel):
+    id: str
+    version_no: int
+    change_type: str
+    summary: str
+    author: str
+    author_id: str
+    created_at: datetime
+    scores: dict[str, int]
+
+
+class ShareLinkOut(BaseModel):
+    token: str
+    url: str
+    scope: str = "read"
+
+
 # ── Integrations: Slack & GitHub ──
 
 class SlackTestRequest(BaseModel):

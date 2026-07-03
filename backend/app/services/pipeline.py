@@ -1,3 +1,26 @@
+﻿import os
+import shutil
+import uuid
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Iterator
+
+from sqlalchemy.orm import Session
+
+from app.config import get_settings
+from app.models import Analysis, Finding, Profile, Workspace, WorkspaceMember
+from app.services.agents import run_agents, AgentFinding
+from app.services.diagram import build_diagram, detect_diagram_type
+from app.services.mediator import run_mediator
+from app.services.llm import llm_vision_extract_graph
+from app.services.render import to_vision_image
+from app.services.iac_review import review_iac
+from app.services.api_review import review_api
+from app.services.db_review import review_database
+from app.observability import get_logger
+from app.services.retry import schedule_retry
+from app.services.retry import schedule_retry
+from app.services.retry import schedule_retry
 import os
 import shutil
 import uuid
@@ -18,6 +41,7 @@ from app.services.iac_review import review_iac
 from app.services.api_review import review_api
 from app.services.db_review import review_database
 from app.observability import get_logger
+from app.services.retry import schedule_retry
 from app.errors import PipelineError
 
 settings = get_settings()
@@ -81,7 +105,6 @@ def _try_vision_extract(file_path: str) -> tuple[list, list] | None:
     return llm_vision_extract_graph(image_bytes, mime)
 
 
-@contextmanager
 def step_context(db: Session, analysis: Analysis, step_name: str) -> Iterator[None]:
     """Wrap a pipeline step with error capture and persistence."""
     logger = get_logger(analysis_id=analysis.id, step=step_name)
@@ -190,7 +213,7 @@ def run_analysis_pipeline(db: Session, analysis_id: str) -> None:
                     parsed = True
 
         if not parsed:
-            diagram_type = f"{diagram_type} · sample"
+            diagram_type = f"{diagram_type} Â· sample"
 
         with step_context(db, analysis, "agent_analysis"):
             findings_data, scores = run_agents(nodes, edges)
@@ -259,3 +282,7 @@ def increment_usage(db: Session, user: Profile) -> None:
     """Legacy non-atomic increment (kept for backward compat, prefer check_and_increment_quota)."""
     user.analyses_used += 1
     db.commit()
+
+
+
+

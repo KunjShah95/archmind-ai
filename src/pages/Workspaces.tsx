@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -46,7 +47,9 @@ export default function Workspaces() {
                   <div className="text-xs text-muted-foreground capitalize">{w.plan} plan</div>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" className="h-7 w-7"><Cog className="h-4 w-4" /></Button>
+              <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
+                <Link to={`/workspaces/${w.id}`}><Cog className="h-4 w-4" /></Link>
+              </Button>
             </div>
             <div className="mt-4 grid grid-cols-2 gap-2 text-center">
               <div className="rounded-md bg-muted/40 py-2">

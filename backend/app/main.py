@@ -2,10 +2,14 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from app.config import get_settings
 from app.database import init_db
 from app.errors import PipelineError
+from app.limiter import limiter
 from app.observability import configure_logging, get_logger, set_correlation_id
 from app.routers import analyses, auth, integrations, meta, workspaces
 
@@ -20,6 +24,11 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="ArchMind AI API", version="1.0.0", lifespan=lifespan)
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+Instrumentator().instrument(app).expose(app, endpoint="/metrics")
 
 app.add_middleware(
     CORSMiddleware,
