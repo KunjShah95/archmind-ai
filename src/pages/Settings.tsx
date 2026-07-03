@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import { api } from "@/lib/api";
+import { getSlackWebhook, setSlackWebhook } from "@/lib/integrations";
 
 export default function Settings() {
   return (
@@ -59,24 +64,20 @@ export default function Settings() {
           </SectionCard>
         </TabsContent>
 
-        <TabsContent value="integrations" className="mt-6">
-          <SectionCard title="Integrations" description="Connect ArchMind to your tools.">
-            {[
-              { t: "Slack", d: "Send findings to a Slack channel.", connected: true },
-              { t: "GitHub", d: "Comment on PRs that change architecture.", connected: false },
-              { t: "Linear", d: "Create issues from findings.", connected: false },
-              { t: "Webhooks", d: "Receive events on your endpoint.", connected: true },
-            ].map((i) => (
-              <div key={i.t} className="flex items-center justify-between py-3 border-b border-border last:border-b-0">
-                <div>
-                  <div className="text-sm font-medium">{i.t}</div>
-                  <div className="text-xs text-muted-foreground">{i.d}</div>
+        <TabsContent value="integrations" className="mt-6 space-y-6">
+          <SlackIntegrationCard />
+          <SectionCard title="GitHub" description="Import repositories and review PRs via webhooks.">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-1">
+              <div>
+                <div className="text-sm font-medium">Repository import & PR webhooks</div>
+                <div className="text-xs text-muted-foreground">
+                  Analyze a public repo's architecture, or wire a PR webhook for CI/CD reviews.
                 </div>
-                <Button variant={i.connected ? "outline" : "default"} size="sm">
-                  {i.connected ? "Manage" : "Connect"}
-                </Button>
               </div>
-            ))}
+              <Button asChild variant="outline" size="sm">
+                <Link to="/integrations">Open GitHub integrations</Link>
+              </Button>
+            </div>
           </SectionCard>
         </TabsContent>
 
@@ -93,6 +94,52 @@ export default function Settings() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+function SlackIntegrationCard() {
+  const [webhook, setWebhook] = useState(getSlackWebhook());
+  const testMutation = useMutation({
+    mutationFn: () => api.slackTest(webhook),
+    onSuccess: () => toast.success("Test message sent to Slack."),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Slack test failed"),
+  });
+
+  const save = () => {
+    if (webhook && !webhook.startsWith("https://hooks.slack.com/")) {
+      toast.error("Webhook must start with https://hooks.slack.com/");
+      return;
+    }
+    setSlackWebhook(webhook);
+    toast.success(webhook ? "Slack webhook saved" : "Slack webhook removed");
+  };
+
+  return (
+    <SectionCard title="Slack" description="Send analysis findings to a Slack channel via an incoming webhook.">
+      <div className="space-y-1.5">
+        <Label htmlFor="slack-webhook">Incoming webhook URL</Label>
+        <Input
+          id="slack-webhook"
+          value={webhook}
+          onChange={(e) => setWebhook(e.target.value)}
+          placeholder="https://hooks.slack.com/services/T000/B000/XXXX"
+        />
+        <p className="text-xs text-muted-foreground">
+          Create one in Slack: Apps → Incoming Webhooks → Add to channel. Stored locally in your browser.
+        </p>
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2 justify-end">
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={!webhook || testMutation.isPending}
+          onClick={() => testMutation.mutate()}
+        >
+          {testMutation.isPending ? "Sending…" : "Send test message"}
+        </Button>
+        <Button size="sm" onClick={save} className="bg-gradient-primary text-primary-foreground">Save</Button>
+      </div>
+    </SectionCard>
   );
 }
 

@@ -25,6 +25,8 @@ export class ApiError extends Error {
   }
 }
 
+const REQUEST_TIMEOUT_MS = 15_000;
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getStoredToken();
   const headers: Record<string, string> = {
@@ -35,7 +37,20 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     headers["Content-Type"] = headers["Content-Type"] || "application/json";
   }
 
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers,
+      cache: "no-store",
+      signal: options.signal ?? AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+  } catch (e) {
+    if (e instanceof DOMException && (e.name === "TimeoutError" || e.name === "AbortError")) {
+      throw new ApiError("Server is not responding. Please try again in a moment.", 408);
+    }
+    throw new ApiError("Cannot reach the server. Check your connection and try again.", 0);
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
     throw new ApiError(err.detail || "Request failed", res.status);
@@ -184,11 +199,6 @@ export const api = {
       body: JSON.stringify({ message }),
     }),
 
-  exportUrl: (id: string, fmt: ExportFormat) => {
-    const token = getStoredToken();
-    return `${API_BASE}/api/analyses/${id}/export/${fmt}${token ? `?token=${token}` : ""}`;
-  },
-
   downloadExport: async (id: string, fmt: ExportFormat, filename: string) => {
     const token = getStoredToken();
     const res = await fetch(`${API_BASE}/api/analyses/${id}/export/${fmt}`, {
@@ -308,6 +318,40 @@ export const api = {
 
   getComplianceAudit: (analysisId: string) =>
     request<any>(`/api/analyses/${analysisId}/compliance`),
+
+  // ── Docs Generator ──
+
+  getGeneratedDoc: (analysisId: string, docType: "readme" | "adr") =>
+    request<{ filename: string; markdown: string }>(
+      `/api/analyses/${analysisId}/docs/${docType}`,
+    ),
+
+  // ── Executive Reports ──
+
+  getExecutiveReport: (analysisId: string, audience: string) =>
+    request<{ audience: string; audience_label: string; score: number; risk_level: string; markdown: string }>(
+      `/api/analyses/${analysisId}/report/${audience}`,
+    ),
+
+  // ── Integrations: Slack & GitHub ──
+
+  slackTest: (webhook_url: string) =>
+    request<{ status: string }>("/api/integrations/slack/test", {
+      method: "POST",
+      body: JSON.stringify({ webhook_url }),
+    }),
+
+  slackNotify: (webhook_url: string, analysis_id: string) =>
+    request<{ status: string }>("/api/integrations/slack/notify", {
+      method: "POST",
+      body: JSON.stringify({ webhook_url, analysis_id }),
+    }),
+
+  githubImport: (repo_url: string, workspace_id?: string) =>
+    request<Analysis>("/api/integrations/github/import", {
+      method: "POST",
+      body: JSON.stringify({ repo_url, workspace_id }),
+    }),
 
   // ── Phase 4: AI Pair Architect ──
 

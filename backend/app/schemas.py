@@ -197,4 +197,20 @@ class PairArchitectRequest(BaseModel):
     new_message: str
 
 
+# ── Integrations: Slack & GitHub ──
+
+class SlackTestRequest(BaseModel):
+    webhook_url: str
+
+
+class SlackNotifyRequest(BaseModel):
+    webhook_url: str
+    analysis_id: str
+
+
+class GithubImportRequest(BaseModel):
+    repo_url: str
+    workspace_id: str | None = None
+
+
 

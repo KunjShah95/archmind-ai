@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Upload as UploadIcon, FolderKanban, GitCompare,
   Users, Settings as Cog, CreditCard, Search, ChevronDown, Menu,
   Sparkles, RefreshCw, Activity, Flame, MessageSquare, Award, GitPullRequest,
-  Bot, DollarSign, ShieldAlert, Cloud
+  Bot, DollarSign, ShieldAlert, Cloud, TrendingUp
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { cn } from "@/lib/utils";
@@ -40,6 +40,7 @@ const NAV_SECTIONS: NavSection[] = [
       { to: "/analyses", label: "Analyses", icon: FolderKanban },
       { to: "/compare", label: "Compare", icon: GitCompare },
       { to: "/benchmarks", label: "Benchmarks", icon: Award },
+      { to: "/score-history", label: "Score History", icon: TrendingUp },
     ],
   },
   {

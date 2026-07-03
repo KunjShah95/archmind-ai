@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import JSON
 
@@ -46,8 +46,8 @@ class WorkspaceMember(Base):
     __table_args__ = (UniqueConstraint("workspace_id", "user_id", name="uq_workspace_user"),)
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    workspace_id: Mapped[str] = mapped_column(String(36), ForeignKey("workspaces.id", ondelete="CASCADE"))
-    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("profiles.id", ondelete="CASCADE"))
+    workspace_id: Mapped[str] = mapped_column(String(36), ForeignKey("workspaces.id", ondelete="CASCADE"), index=True)
+    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("profiles.id", ondelete="CASCADE"), index=True)
     role: Mapped[str] = mapped_column(String(32), default="editor")
 
     workspace: Mapped["Workspace"] = relationship(back_populates="members")
@@ -58,8 +58,9 @@ class Analysis(Base):
     __tablename__ = "analyses"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    workspace_id: Mapped[str] = mapped_column(String(36), ForeignKey("workspaces.id"))
-    author_id: Mapped[str] = mapped_column(String(36), ForeignKey("profiles.id"))
+    workspace_id: Mapped[str] = mapped_column(String(36), ForeignKey("workspaces.id"), index=True)
+    author_id: Mapped[str] = mapped_column(String(36), ForeignKey("profiles.id"), index=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
     name: Mapped[str] = mapped_column(String(255))
     source_type: Mapped[str] = mapped_column(String(32))
     diagram_type: Mapped[str | None] = mapped_column(String(64), nullable=True)
@@ -77,6 +78,12 @@ class Analysis(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
+    error_code: Mapped[str | None] = mapped_column(String(64), nullable=True, default=None)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
+    failed_step: Mapped[str | None] = mapped_column(String(64), nullable=True, default=None)
+    used_heuristic: Mapped[bool] = mapped_column(Boolean, default=False)
+    score_source: Mapped[str | None] = mapped_column(String(32), nullable=True, default=None)
+
     workspace: Mapped["Workspace"] = relationship(back_populates="analyses")
     author: Mapped["Profile"] = relationship(back_populates="analyses")
     findings: Mapped[list["Finding"]] = relationship(back_populates="analysis", cascade="all, delete-orphan")
@@ -87,13 +94,17 @@ class Finding(Base):
     __tablename__ = "findings"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    analysis_id: Mapped[str] = mapped_column(String(36), ForeignKey("analyses.id", ondelete="CASCADE"))
-    agent: Mapped[str] = mapped_column(String(64))
+    analysis_id: Mapped[str] = mapped_column(String(36), ForeignKey("analyses.id", ondelete="CASCADE"), index=True)
+    agent: Mapped[str] = mapped_column(String(64), index=True)
     severity: Mapped[str] = mapped_column(String(32))
     title: Mapped[str] = mapped_column(String(512))
     summary: Mapped[str] = mapped_column(Text)
     recommendation: Mapped[str] = mapped_column(Text)
     node_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
+    modified_by: Mapped[str | None] = mapped_column(String(36), nullable=True, default=None)
+    modified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
+    confidence: Mapped[float | None] = mapped_column(nullable=True, default=None)
 
     analysis: Mapped["Analysis"] = relationship(back_populates="findings")
 

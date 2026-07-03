@@ -239,8 +239,11 @@ def _llm_findings(nodes: list[dict], edges: list[dict]) -> tuple[list[AgentFindi
             continue
         llm_findings, _ = result
         for f in llm_findings:
+            agent_val = f.get("agent", key)
+            if agent_val not in AGENT_KEYS:
+                agent_val = key
             all_findings.append(AgentFinding(
-                agent=f.get("agent", key),
+                agent=agent_val,
                 severity=f.get("severity", "medium"),
                 title=f.get("title", "Unknown finding"),
                 summary=f.get("summary", ""),
@@ -284,17 +287,20 @@ def run_single_agent(agent_key: str, nodes: list[dict], edges: list[dict]) -> tu
     result = llm_agent_analyze(agent_key, labels, edges_desc, len(nodes), len(edges))
     if result is not None:
         llm_findings, llm_score = result
-        return [
-            AgentFinding(
-                agent=f.get("agent", agent_key),
+        findings_list = []
+        for f in llm_findings:
+            agent_val = f.get("agent", agent_key)
+            if agent_val not in AGENT_KEYS:
+                agent_val = agent_key
+            findings_list.append(AgentFinding(
+                agent=agent_val,
                 severity=f.get("severity", "medium"),
                 title=f.get("title", "Unknown"),
                 summary=f.get("summary", ""),
                 recommendation=f.get("recommendation", ""),
                 node_id=f.get("node_id"),
-            )
-            for f in llm_findings
-        ], llm_score
+            ))
+        return findings_list, llm_score
 
     all_findings = _heuristic_findings(nodes, edges)
     agent_findings = [f for f in all_findings if f.agent == agent_key]

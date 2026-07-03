@@ -6,6 +6,10 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Landing from "./pages/Landing";
 import Pricing from "./pages/Pricing";
+import Contact from "./pages/Contact";
+import Privacy from "./pages/legal/Privacy";
+import Terms from "./pages/legal/Terms";
+import Security from "./pages/legal/Security";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import AppLayout from "./layouts/AppLayout";
@@ -18,12 +22,16 @@ import Workspaces from "./pages/Workspaces";
 import Settings from "./pages/Settings";
 import Billing from "./pages/Billing";
 import AgentReport from "./pages/AgentReport";
+import ExecutiveReport from "./pages/ExecutiveReport";
 import Generator from "./pages/Generator";
 import Redesign from "./pages/Redesign";
+import RiskHeatmap from "./pages/RiskHeatmap";
+import DocsGenerator from "./pages/DocsGenerator";
 import Simulation from "./pages/Simulation";
 import FailureSimulator from "./pages/FailureSimulator";
 import Debate from "./pages/Debate";
 import Benchmarks from "./pages/Benchmarks";
+import ScoreHistory from "./pages/ScoreHistory";
 import Integrations from "./pages/Integrations";
 import LiveCloud from "./pages/Cloud";
 import FinOps from "./pages/FinOps";
@@ -46,6 +54,10 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/security" element={<Security />} />
+            <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route
@@ -61,7 +73,10 @@ const App = () => (
               <Route path="/analyses" element={<Analyses />} />
               <Route path="/analyses/:id" element={<AnalysisDetail />} />
               <Route path="/analyses/:id/agents/:agentKey" element={<AgentReport />} />
+              <Route path="/analyses/:id/report" element={<ExecutiveReport />} />
               <Route path="/analyses/:id/redesign" element={<Redesign />} />
+              <Route path="/analyses/:id/docs" element={<DocsGenerator />} />
+              <Route path="/analyses/:id/heatmap" element={<RiskHeatmap />} />
               <Route path="/compare" element={<Compare />} />
               <Route path="/workspaces" element={<Workspaces />} />
               <Route path="/settings" element={<Settings />} />
@@ -72,6 +87,7 @@ const App = () => (
               <Route path="/chaos" element={<FailureSimulator />} />
               <Route path="/debate" element={<Debate />} />
               <Route path="/benchmarks" element={<Benchmarks />} />
+              <Route path="/score-history" element={<ScoreHistory />} />
 
               {/* Phase 3 Routes */}
               <Route path="/integrations" element={<Integrations />} />

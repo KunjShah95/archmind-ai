@@ -90,7 +90,7 @@ export default function Pricing() {
         </div>
 
         <div className="mt-16 text-sm text-muted-foreground">
-          Need something else? <a className="text-primary hover:underline" href="#">Talk to sales</a>
+          Need something else? <a className="text-primary hover:underline" href="mailto:sales@archmind.ai">Talk to sales</a>
         </div>
       </section>
     </div>

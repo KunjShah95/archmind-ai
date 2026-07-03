@@ -4,16 +4,19 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ReactFlow, { Background, Controls, MarkerType, MiniMap } from "reactflow";
 import { motion } from "framer-motion";
 import {
-  Download, Share2, Sparkles, Send, ArrowLeft, Loader2, Scale,
+  Download, Share2, Sparkles, Send, ArrowLeft, Loader2, Scale, Flame, Slack,
   TrendingUp, ShieldCheck, HeartPulse, Gauge, DollarSign, Wrench, Activity,
+  HelpCircle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ScoreRing } from "@/components/ScoreRing";
 import { MediatorReport } from "@/components/MediatorReport";
-import { AGENTS, AgentKey, SEVERITY_META, overallScore, scoreColor } from "@/lib/types";
+import { AGENTS, AgentKey, Severity, SEVERITY_META, overallScore, scoreColor } from "@/lib/types";
+import { getSlackWebhook } from "@/lib/integrations";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -21,9 +24,11 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
+import type { Finding } from "@/lib/api";
 
 const ICONS: Record<string, LucideIcon> = {
   TrendingUp, ShieldCheck, HeartPulse, Gauge, DollarSign, Wrench, Activity,
+  HelpCircle,
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -33,12 +38,48 @@ const STATUS_LABEL: Record<string, string> = {
   failed: "Failed",
 };
 
+const SEVERITY_RANK: Record<Severity, number> = { low: 1, medium: 2, high: 3, critical: 4 };
+
+/** Ring/glow treatment per worst finding severity (low keeps the default node look). */
+const HEAT_STYLES: Partial<Record<Severity, { border: string; glow: string }>> = {
+  critical: {
+    border: "hsl(var(--danger))",
+    glow: "0 0 0 3px hsl(var(--danger) / 0.25), 0 0 18px hsl(var(--danger) / 0.35)",
+  },
+  high: {
+    border: "#fb923c",
+    glow: "0 0 0 3px rgb(251 146 60 / 0.22), 0 0 14px rgb(251 146 60 / 0.28)",
+  },
+  medium: {
+    border: "hsl(var(--warning))",
+    glow: "0 0 0 3px hsl(var(--warning) / 0.2)",
+  },
+};
+
+function downloadGeneratedDoc(analysisId: string, docType: "readme" | "adr", label: string) {
+  api.getGeneratedDoc(analysisId, docType)
+    .then((doc) => {
+      const blob = new Blob([doc.markdown], { type: "text/markdown" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = doc.filename;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success(`Downloaded ${label}`);
+    })
+    .catch(() => toast.error(`${label} generation failed`));
+}
+
 export default function AnalysisDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [activeAgent, setActiveAgent] = useState<AgentKey | "all">("all");
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  // null = "no user choice yet" → defaults to ON when any finding maps to a node.
+  const [heatmapOverride, setHeatmapOverride] = useState<boolean | null>(null);
+  const [sendingSlack, setSendingSlack] = useState(false);
 
   const { data: analysis, isLoading, error, refetch } = useQuery({
     queryKey: ["analysis", id],
@@ -56,24 +97,70 @@ export default function AnalysisDetail() {
     });
   }, [analysis, activeAgent, selectedNode]);
 
+  // Findings grouped per diagram node, worst severity first.
+  const findingsByNode = useMemo(() => {
+    const map = new Map<string, Finding[]>();
+    for (const f of analysis?.findings ?? []) {
+      if (!f.node_id) continue;
+      const arr = map.get(f.node_id) ?? [];
+      arr.push(f);
+      map.set(f.node_id, arr);
+    }
+    for (const arr of map.values()) arr.sort((a, b) => SEVERITY_RANK[b.severity] - SEVERITY_RANK[a.severity]);
+    return map;
+  }, [analysis]);
+
+  const hasNodeFindings = findingsByNode.size > 0;
+  const heatmapOn = heatmapOverride ?? hasNodeFindings;
+
   const nodes = useMemo(() => {
     if (!analysis?.diagram_nodes?.length) return [];
-    return analysis.diagram_nodes.map((n) => ({
-      ...n,
-      type: "default" as const,
-      style: {
-        border: `1px solid ${selectedNode === n.id ? "hsl(var(--primary))" : "hsl(var(--border))"}`,
-        background: "hsl(var(--card))",
-        color: "hsl(var(--foreground))",
-        borderRadius: 10,
-        padding: 10,
-        fontSize: 12,
-        fontWeight: 500,
-        width: 150,
-        boxShadow: selectedNode === n.id ? "0 0 0 4px hsl(var(--primary) / 0.2)" : undefined,
-      },
-    }));
-  }, [analysis, selectedNode]);
+    return analysis.diagram_nodes.map((n) => {
+      const nodeFindings = heatmapOn ? findingsByNode.get(n.id) : undefined;
+      const heat = nodeFindings ? HEAT_STYLES[nodeFindings[0].severity] : undefined;
+      const selected = selectedNode === n.id;
+      return {
+        ...n,
+        type: "default" as const,
+        data: nodeFindings?.length
+          ? {
+              ...n.data,
+              label: (
+                <Tooltip delayDuration={150}>
+                  <TooltipTrigger asChild>
+                    <span className="block w-full">{n.data.label}</span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs p-2.5 space-y-2 text-left">
+                    {nodeFindings.map((f) => (
+                      <div key={f.id}>
+                        <div className="flex items-center gap-1.5">
+                          <span className={`shrink-0 text-[10px] px-1.5 py-0.5 rounded ${SEVERITY_META[f.severity].color}`}>
+                            {SEVERITY_META[f.severity].label}
+                          </span>
+                          <span className="text-xs font-medium leading-snug">{f.title}</span>
+                        </div>
+                        <p className="mt-0.5 text-[11px] text-muted-foreground leading-snug line-clamp-2">{f.recommendation}</p>
+                      </div>
+                    ))}
+                  </TooltipContent>
+                </Tooltip>
+              ),
+            }
+          : n.data,
+        style: {
+          border: `1px solid ${selected ? "hsl(var(--primary))" : heat ? heat.border : "hsl(var(--border))"}`,
+          background: "hsl(var(--card))",
+          color: "hsl(var(--foreground))",
+          borderRadius: 10,
+          padding: 10,
+          fontSize: 12,
+          fontWeight: 500,
+          width: 150,
+          boxShadow: selected ? "0 0 0 4px hsl(var(--primary) / 0.2)" : heat?.glow,
+        },
+      };
+    });
+  }, [analysis, selectedNode, heatmapOn, findingsByNode]);
 
   const edges = useMemo(() =>
     (analysis?.diagram_edges ?? []).map((e, i) => ({
@@ -97,6 +184,23 @@ export default function AnalysisDetail() {
       </div>
     );
   }
+
+  const sendToSlack = async () => {
+    const url = getSlackWebhook();
+    if (!url) {
+      toast.error("Add a Slack webhook in Settings → Integrations first");
+      return;
+    }
+    setSendingSlack(true);
+    try {
+      await api.slackNotify(url, analysis.id);
+      toast.success("Findings sent to Slack");
+    } catch {
+      toast.error("Failed to send findings to Slack");
+    } finally {
+      setSendingSlack(false);
+    }
+  };
 
   const overall = overallScore(analysis.scores);
   const statusClass = {
@@ -123,7 +227,26 @@ export default function AnalysisDetail() {
             {analysis.workspace} · {analysis.author} · {new Date(analysis.uploaded_at).toLocaleString()}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!hasNodeFindings}
+            onClick={() => setHeatmapOverride(!heatmapOn)}
+            className={cn(heatmapOn && hasNodeFindings && "border-primary/50 bg-primary/5 text-primary hover:text-primary")}
+            title={hasNodeFindings ? "Toggle finding-severity overlay on the diagram" : "No findings are mapped to diagram nodes"}
+          >
+            <Flame className="h-3.5 w-3.5 mr-1.5" /> Risk heatmap
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={analysis.status !== "ready" || sendingSlack}
+            onClick={sendToSlack}
+          >
+            {sendingSlack ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Slack className="h-3.5 w-3.5 mr-1.5" />}
+            Send to Slack
+          </Button>
           <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success("Link copied"); }}>
             <Share2 className="h-3.5 w-3.5 mr-1.5" /> Share
           </Button>
@@ -139,8 +262,22 @@ export default function AnalysisDetail() {
                   {f.toUpperCase()}
                 </DropdownMenuItem>
               ))}
+              {([["readme", "Architecture doc"], ["adr", "ADR"]] as const).map(([docType, label]) => (
+                <DropdownMenuItem key={docType} onClick={() => downloadGeneratedDoc(analysis.id, docType, label)}>
+                  {label}
+                </DropdownMenuItem>
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
+          <Button asChild variant="outline" size="sm">
+            <Link to={`/analyses/${analysis.id}/report`}><Sparkles className="h-3.5 w-3.5 mr-1.5" /> Report</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link to={`/analyses/${analysis.id}/docs`}><Download className="h-3.5 w-3.5 mr-1.5" /> Docs</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link to={`/analyses/${analysis.id}/heatmap`}><Flame className="h-3.5 w-3.5 mr-1.5" /> Heatmap</Link>
+          </Button>
           <Button size="sm" className="bg-gradient-primary text-primary-foreground hover:opacity-90" onClick={() => refetch()}>
             <Sparkles className="h-3.5 w-3.5 mr-1.5" /> Refresh
           </Button>
@@ -159,8 +296,9 @@ export default function AnalysisDetail() {
           <ScoreRing value={overall} size={84} label="Overall" />
         </div>
         {AGENTS.map((a2) => {
-          const Icon = ICONS[a2.icon];
-          const s = analysis.scores[a2.key] ?? 0;
+          const Icon = ICONS[a2?.icon];
+          const s = analysis.scores[a2?.key] ?? 0;
+          if (!Icon) return null;
           return (
             <Link
               key={a2.key}
@@ -192,7 +330,15 @@ export default function AnalysisDetail() {
               ) : "Click a node to filter findings"}
             </div>
           </div>
-          <div className="h-[520px]">
+          <div className="relative h-[520px]">
+            {heatmapOn && nodes.length > 0 && (
+              <div className="pointer-events-none absolute top-3 left-3 z-10 flex items-center gap-1 sm:gap-3 rounded-lg border border-border bg-card/90 backdrop-blur px-1.5 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-[11px] text-muted-foreground">
+                <span className="flex items-center gap-1 sm:gap-1.5"><span className="h-1.5 sm:h-2.5 w-1.5 sm:w-2.5 rounded-full bg-success" /> Healthy</span>
+                <span className="flex items-center gap-1 sm:gap-1.5"><span className="h-1.5 sm:h-2.5 w-1.5 sm:w-2.5 rounded-full bg-warning" /> Warning</span>
+                <span className="flex items-center gap-1 sm:gap-1.5"><span className="h-1.5 sm:h-2.5 w-1.5 sm:w-2.5 rounded-full bg-orange-400" /> High</span>
+                <span className="flex items-center gap-1 sm:gap-1.5"><span className="h-1.5 sm:h-2.5 w-1.5 sm:w-2.5 rounded-full bg-danger" /> Critical</span>
+              </div>
+            )}
             {nodes.length > 0 ? (
               <ReactFlow
                 nodes={nodes}
@@ -214,18 +360,20 @@ export default function AnalysisDetail() {
 
         <div className="col-span-12 lg:col-span-4 rounded-xl border border-border bg-card overflow-hidden flex flex-col min-h-[520px]">
           <Tabs defaultValue="findings" className="flex-1 flex flex-col">
-            <TabsList className="m-3">
-              <TabsTrigger value="findings">Findings</TabsTrigger>
-              <TabsTrigger value="debate">Debate</TabsTrigger>
-              <TabsTrigger value="chat">Chat</TabsTrigger>
+            <TabsList className="m-3 max-sm:gap-0">
+              <TabsTrigger value="findings" className="max-sm:px-2 max-sm:text-[11px]">Findings</TabsTrigger>
+              <TabsTrigger value="debate" className="max-sm:px-2 max-sm:text-[11px]">Debate</TabsTrigger>
+              <TabsTrigger value="report" className="max-sm:px-2 max-sm:text-[11px]">Report</TabsTrigger>
+              <TabsTrigger value="chat" className="max-sm:px-2 max-sm:text-[11px]">Chat</TabsTrigger>
             </TabsList>
             <TabsContent value="findings" className="flex-1 m-0 overflow-y-auto scrollbar-thin px-3 pb-3 space-y-2">
               {findings.length === 0 && (
                 <p className="text-sm text-muted-foreground px-1 py-4">No findings match the current filter.</p>
               )}
               {findings.map((f) => {
-                const agent = AGENTS.find((a) => a.key === f.agent)!;
-                const Icon = ICONS[agent.icon];
+                const agent = AGENTS.find((a) => a.key === f.agent) ?? { key: f.agent, name: "Unknown Agent", description: "", accent: "from-muted to-muted", icon: "HelpCircle" };
+                const Icon = ICONS[agent?.icon];
+                if (!Icon) return null;
                 return (
                   <motion.div
                     key={f.id}
@@ -258,12 +406,104 @@ export default function AnalysisDetail() {
                 <p className="text-sm text-muted-foreground px-1 py-4">Debate report will appear when analysis completes.</p>
               )}
             </TabsContent>
+            <TabsContent value="report" className="flex-1 m-0 overflow-y-auto scrollbar-thin px-3 pb-3">
+              <ReportPanel analysisId={analysis.id} analysisName={analysis.name} enabled={analysis.status === "ready"} />
+            </TabsContent>
             <TabsContent value="chat" className="flex-1 m-0 flex flex-col">
               <ChatPanel analysisId={analysis.id} enabled={analysis.status === "ready"} />
             </TabsContent>
           </Tabs>
         </div>
       </div>
+    </div>
+  );
+}
+
+const REPORT_AUDIENCES = [
+  { value: "cto", label: "CTO" },
+  { value: "engineering_manager", label: "Engineering Manager" },
+  { value: "investor", label: "Investor" },
+  { value: "product_manager", label: "Product Manager" },
+  { value: "architect", label: "Solution Architect" },
+];
+
+function ReportMarkdown({ markdown }: { markdown: string }) {
+  return (
+    <div className="space-y-1.5">
+      {markdown.split("\n").map((line, i) => {
+        const bold = (s: string) => {
+          const parts = s.split(/\*\*(.+?)\*\*/g);
+          return parts.map((p, j) => (j % 2 === 1 ? <strong key={j} className="text-foreground">{p}</strong> : p));
+        };
+        if (line.startsWith("# ")) return <h2 key={i} className="font-display text-base font-semibold pt-1">{line.slice(2)}</h2>;
+        if (line.startsWith("## ")) return <h3 key={i} className="font-display text-sm font-semibold pt-2">{line.slice(3)}</h3>;
+        if (line.startsWith("### ")) return <h4 key={i} className="text-xs font-semibold pt-1.5">{line.slice(4)}</h4>;
+        if (line.startsWith("- ")) return <div key={i} className="text-xs text-muted-foreground pl-3 leading-relaxed">• {bold(line.slice(2))}</div>;
+        if (!line.trim()) return null;
+        return <p key={i} className="text-xs text-muted-foreground leading-relaxed">{bold(line)}</p>;
+      })}
+    </div>
+  );
+}
+
+function ReportPanel({ analysisId, analysisName, enabled }: { analysisId: string; analysisName: string; enabled: boolean }) {
+  const [audience, setAudience] = useState("cto");
+  const { data: report, isLoading, error } = useQuery({
+    queryKey: ["executive-report", analysisId, audience],
+    queryFn: () => api.getExecutiveReport(analysisId, audience),
+    enabled,
+  });
+
+  const download = () => {
+    if (!report) return;
+    const blob = new Blob([report.markdown], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${analysisName.replace(/[^\w.-]+/g, "_")}-${audience}-report.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  if (!enabled) {
+    return <p className="text-sm text-muted-foreground px-1 py-4">Report will be available when analysis completes.</p>;
+  }
+
+  return (
+    <div className="space-y-3 pt-1">
+      <div className="flex flex-wrap gap-1.5">
+        {REPORT_AUDIENCES.map((a) => (
+          <button
+            key={a.value}
+            type="button"
+            onClick={() => setAudience(a.value)}
+            className={cn(
+              "text-[11px] px-2 py-1 rounded-md border transition-colors",
+              audience === a.value
+                ? "border-primary/50 bg-primary/10 text-foreground font-medium"
+                : "border-border text-muted-foreground hover:border-primary/30",
+            )}
+          >
+            {a.label}
+          </button>
+        ))}
+      </div>
+      {isLoading && <p className="text-xs text-muted-foreground py-4 animate-pulse">Generating report…</p>}
+      {error && <p className="text-xs text-danger py-4">Could not load report. Try again.</p>}
+      {report && (
+        <>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Badge variant="outline">Score {report.score}/100</Badge>
+            <Badge variant="outline">Risk: {report.risk_level}</Badge>
+            <Button variant="outline" size="sm" className="ml-auto h-7 text-xs" onClick={download}>
+              <Download className="h-3 w-3 mr-1" /> .md
+            </Button>
+          </div>
+          <div className="rounded-lg border border-border bg-background/40 p-3">
+            <ReportMarkdown markdown={report.markdown} />
+          </div>
+        </>
+      )}
     </div>
   );
 }

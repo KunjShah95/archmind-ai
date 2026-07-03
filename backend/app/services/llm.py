@@ -9,11 +9,14 @@ the first configured provider that returns a response wins, others are fallbacks
 """
 
 import json
+import logging
 import os
 import urllib.request
 import urllib.error
 from dataclasses import dataclass
 from typing import Callable
+
+_logger = logging.getLogger(__name__)
 
 
 # Groq (and some others) sit behind Cloudflare, which blocks urllib's default
@@ -162,7 +165,8 @@ def _call_ollama(p: ProviderConfig, prompt: str, system: str) -> str | None:
         with urllib.request.urlopen(req, timeout=60) as resp:
             data = json.loads(resp.read().decode())
             return data.get("response")
-    except Exception:
+    except Exception as e:
+        _logger.warning("LLM call failed", extra={"provider": "ollama", "error": str(e)})
         return None
 
 
@@ -189,7 +193,8 @@ def _call_openai_compat(p: ProviderConfig, prompt: str, system: str) -> str | No
         with urllib.request.urlopen(req, timeout=60) as resp:
             data = json.loads(resp.read().decode())
             return data.get("choices", [{}])[0].get("message", {}).get("content")
-    except Exception:
+    except Exception as e:
+        _logger.warning("LLM call failed", extra={"provider": "openai_compat", "error": str(e)})
         return None
 
 
@@ -215,7 +220,8 @@ def _call_huggingface(p: ProviderConfig, prompt: str, system: str) -> str | None
             if isinstance(data, list) and len(data) > 0:
                 return data[0].get("generated_text", "")
             return None
-    except Exception:
+    except Exception as e:
+        _logger.warning("LLM call failed", extra={"provider": "huggingface", "error": str(e)})
         return None
 
 
@@ -239,7 +245,8 @@ def _call_gemini(p: ProviderConfig, prompt: str, system: str) -> str | None:
                 return None
             parts = candidates[0].get("content", {}).get("parts", [])
             return "".join(part.get("text", "") for part in parts) or None
-    except Exception:
+    except Exception as e:
+        _logger.warning("LLM call failed", extra={"provider": "gemini", "error": str(e)})
         return None
 
 
@@ -268,7 +275,8 @@ def _call_openai_compat_vision(p: ProviderConfig, prompt: str, system: str, imag
         with urllib.request.urlopen(req, timeout=90) as resp:
             data = json.loads(resp.read().decode())
             return data.get("choices", [{}])[0].get("message", {}).get("content")
-    except Exception:
+    except Exception as e:
+        _logger.warning("LLM call failed", extra={"provider": "openai_compat_vision", "error": str(e)})
         return None
 
 
@@ -295,7 +303,8 @@ def _call_gemini_vision(p: ProviderConfig, prompt: str, system: str, image_b64: 
                 return None
             parts = candidates[0].get("content", {}).get("parts", [])
             return "".join(part.get("text", "") for part in parts) or None
-    except Exception:
+    except Exception as e:
+        _logger.warning("LLM call failed", extra={"provider": "gemini_vision", "error": str(e)})
         return None
 
 
@@ -317,7 +326,8 @@ def _call_ollama_vision(p: ProviderConfig, prompt: str, system: str, image_b64: 
         with urllib.request.urlopen(req, timeout=120) as resp:
             data = json.loads(resp.read().decode())
             return data.get("response")
-    except Exception:
+    except Exception as e:
+        _logger.warning("LLM call failed", extra={"provider": "ollama_vision", "error": str(e)})
         return None
 
 

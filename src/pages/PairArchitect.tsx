@@ -85,7 +85,7 @@ export default function PairArchitect() {
   };
 
   return (
-    <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-8 h-[calc(100vh-100px)] flex flex-col">
+    <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-8 min-h-[calc(100dvh-100px)] flex flex-col">
       <div className="shrink-0">
         <PageHeader
           title="AI Pair Architect"
@@ -93,7 +93,7 @@ export default function PairArchitect() {
         />
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6 flex-1 min-h-0 overflow-hidden">
+      <div className="grid lg:grid-cols-2 gap-6 flex-1 min-h-0">
         {/* Left Panel: Chat Dialogue */}
         <div className="rounded-xl border border-border bg-card flex flex-col h-full overflow-hidden">
           <div className="px-4 py-3 border-b border-border bg-muted/20 flex items-center gap-2">

@@ -63,12 +63,12 @@ def _build_benchmark_prompt(labels: List[str], connections: List[str]) -> str:
     )
 
 def benchmark_architecture_llm(nodes: List[dict], edges: List[dict]) -> Dict[str, Any] | None:
-    labels = list(node_labels(nodes).values())
+    labels = node_labels(nodes)
     connections = [
         f"{labels.get(e.get('source', ''), '?')} -> {labels.get(e.get('target', ''), '?')}"
         for e in edges
     ]
-    prompt = _build_benchmark_prompt(labels, connections)
+    prompt = _build_benchmark_prompt(list(labels.values()), connections)
     result = llm_complete(_BENCHMARK_SYSTEM, prompt)
     if not result:
         return None

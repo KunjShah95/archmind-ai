@@ -115,14 +115,14 @@ export default function Upload() {
             onDragLeave={() => setDrag(false)}
             onDrop={onDrop}
             className={cn(
-              "relative rounded-2xl border-2 border-dashed p-12 text-center transition-all",
+              "relative rounded-2xl border-2 border-dashed p-6 md:p-12 text-center transition-all",
               drag ? "border-primary bg-primary/5" : "border-border bg-card/40 hover:bg-card"
             )}
           >
-            <div className="mx-auto h-14 w-14 rounded-xl bg-gradient-primary grid place-items-center shadow-glow">
-              <UploadCloud className="h-7 w-7 text-primary-foreground" />
+            <div className="mx-auto h-10 w-10 md:h-14 md:w-14 rounded-xl bg-gradient-primary grid place-items-center shadow-glow">
+              <UploadCloud className="h-5 w-5 md:h-7 md:w-7 text-primary-foreground" />
             </div>
-            <h3 className="mt-5 font-display text-xl font-semibold">Drop your architecture or config file here</h3>
+            <h3 className="mt-4 md:mt-5 font-display text-base md:text-xl font-semibold">Drop your architecture or config file here</h3>
             <p className="mt-1 text-sm text-muted-foreground">
               PNG, JPG, Draw.io, Excalidraw, Mermaid, Terraform (.tf), Kubernetes/Docker Compose (.yaml), OpenAPI (.json/.yaml), SQL Schema (.sql)
             </p>

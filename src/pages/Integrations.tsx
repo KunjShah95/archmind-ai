@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import {
   GitPullRequest,
@@ -9,9 +10,11 @@ import {
   Code,
   ArrowRight,
   ExternalLink,
+  Github,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
@@ -37,6 +40,63 @@ const SAMPLE_PAYLOAD = {
     }
   ]
 };
+
+function GithubImportCard() {
+  const navigate = useNavigate();
+  const [repoUrl, setRepoUrl] = useState("");
+  const importMutation = useMutation({
+    mutationFn: () => api.githubImport(repoUrl),
+    onSuccess: (analysis) => {
+      toast.success("Repository imported — analysis running.");
+      navigate(`/analyses/${analysis.id}`);
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Import failed"),
+  });
+
+  return (
+    <div className="rounded-xl border border-border bg-card p-6 space-y-4 shadow-sm">
+      <h3 className="font-display font-semibold text-sm flex items-center gap-1.5">
+        <Github className="h-4.5 w-4.5 text-primary" />
+        Analyze a GitHub repository
+      </h3>
+      <p className="text-xs text-muted-foreground">
+        Paste a public repository URL. ArchMind maps its structure (frontend, API, database, containers,
+        CI/CD) into an architecture diagram and runs the full multi-agent review.
+      </p>
+      <form
+        className="flex flex-col sm:flex-row gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (repoUrl.trim()) importMutation.mutate();
+        }}
+      >
+        <Input
+          value={repoUrl}
+          onChange={(e) => setRepoUrl(e.target.value)}
+          placeholder="https://github.com/owner/repo"
+          className="font-mono text-xs"
+        />
+        <Button
+          type="submit"
+          disabled={!repoUrl.trim() || importMutation.isPending}
+          className="bg-gradient-primary text-primary-foreground hover:opacity-90 shrink-0"
+        >
+          {importMutation.isPending ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Importing…
+            </>
+          ) : (
+            <>
+              Import & analyze
+              <ArrowRight className="h-4 w-4 ml-1.5" />
+            </>
+          )}
+        </Button>
+      </form>
+    </div>
+  );
+}
 
 export default function Integrations() {
   const [webhookUrl] = useState("http://localhost:8000/api/analyses/integrations/webhook/github");
@@ -78,6 +138,8 @@ export default function Integrations() {
         title="CI/CD Integrations"
         description="Connect ArchMind AI to your code repository host to automatically review infrastructure and API schema files on every Pull Request."
       />
+
+      <GithubImportCard />
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Left Side: Setup Instructions */}

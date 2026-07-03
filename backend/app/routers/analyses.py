@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import Response
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.auth import get_current_user
 from app.database import get_db
@@ -30,9 +30,10 @@ from app.services.agents import (
 )
 from app.services.diagram import detect_diagram_type
 from app.services.pipeline import (
-    check_analysis_quota,
+    check_and_increment_quota,
     ensure_default_workspace,
     increment_usage,
+    release_analysis_slot,
     run_analysis_pipeline,
     save_upload,
 )
@@ -49,6 +50,8 @@ from app.services.cloud_scanner import scan_live_infrastructure, compare_actual_
 from app.services.finops import calculate_finops_projections
 from app.services.compliance import audit_compliance_frameworks
 from app.services.pair_architect import run_pair_architect
+from app.services.executive_report import build_executive_report
+from app.services.docs_generator import build_doc
 from app.config import get_settings
 
 router = APIRouter(prefix="/api/analyses", tags=["analyses"])
@@ -88,7 +91,7 @@ def list_analyses(
     ws_ids = [m.workspace_id for m in db.query(WorkspaceMember).filter(WorkspaceMember.user_id == user.id).all()]
     if not ws_ids:
         return []
-    query = db.query(Analysis).filter(Analysis.workspace_id.in_(ws_ids)).order_by(Analysis.created_at.desc())
+    query = db.query(Analysis).options(joinedload(Analysis.workspace), joinedload(Analysis.author)).filter(Analysis.workspace_id.in_(ws_ids)).order_by(Analysis.created_at.desc())
     if q:
         query = query.filter(Analysis.name.ilike(f"%{q}%"))
     return [_to_summary(a, db) for a in query.all()]
@@ -100,7 +103,7 @@ def get_analysis(
     user: Annotated[Profile, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ):
-    a = db.get(Analysis, analysis_id)
+    a = db.query(Analysis).options(joinedload(Analysis.findings)).filter(Analysis.id == analysis_id).first()
     if not a or not _user_can_access(db, user.id, a):
         raise HTTPException(status_code=404, detail="Analysis not found")
     summary = _to_summary(a, db)
@@ -124,7 +127,7 @@ def create_analysis_json(
     user: Annotated[Profile, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ):
-    check_analysis_quota(db, user)
+    check_and_increment_quota(db, user)
     ws_id = body.workspace_id
     if ws_id:
         if not db.query(WorkspaceMember).filter(WorkspaceMember.workspace_id == ws_id, WorkspaceMember.user_id == user.id).first():
@@ -148,7 +151,6 @@ def create_analysis_json(
     db.add(analysis)
     db.commit()
     db.refresh(analysis)
-    increment_usage(db, user)
     background_tasks.add_task(_run_pipeline_task, analysis.id)
     return _to_summary(analysis, db)
 
@@ -162,7 +164,7 @@ async def create_analysis_upload(
     name: str = Form("Untitled architecture"),
     workspace_id: str | None = Form(None),
 ):
-    check_analysis_quota(db, user)
+    check_and_increment_quota(db, user)
     content = await file.read()
     if len(content) > settings.max_upload_bytes:
         raise HTTPException(status_code=400, detail="File exceeds 25 MB limit")
@@ -185,16 +187,31 @@ async def create_analysis_upload(
     db.add(analysis)
     db.commit()
     db.refresh(analysis)
-    increment_usage(db, user)
     background_tasks.add_task(_run_pipeline_task, analysis.id)
     return _to_summary(analysis, db)
 
 
 def _run_pipeline_task(analysis_id: str) -> None:
     from app.database import SessionLocal
+    from app.observability import get_logger
     db = SessionLocal()
+    logger = get_logger(analysis_id=analysis_id)
     try:
         run_analysis_pipeline(db, analysis_id)
+    except Exception:
+        logger.exception("pipeline_task_crashed")
+        try:
+            analysis = db.get(Analysis, analysis_id)
+            if analysis and analysis.status != "failed":
+                analysis.status = "failed"
+                analysis.error_code = "PIPELINE_CRASHED"
+                analysis.error_message = "Pipeline crashed with unhandled exception"
+                # Compensate: release the quota slot
+                if analysis.author:
+                    release_analysis_slot(db, analysis.author)
+                db.commit()
+        except Exception:
+            db.rollback()
     finally:
         db.close()
 
@@ -370,7 +387,7 @@ def generate_analysis(
     db: Annotated[Session, Depends(get_db)],
 ):
     """Generate a complete architecture from a natural language description."""
-    check_analysis_quota(db, user)
+    check_and_increment_quota(db, user)
     ws = ensure_default_workspace(db, user)
 
     # Generate the architecture
@@ -414,7 +431,6 @@ def generate_analysis(
     db.add(analysis)
     db.commit()
     db.refresh(analysis)
-    increment_usage(db, user)
 
     # Queue the review pipeline to also analyze the generated architecture
     background_tasks.add_task(_run_pipeline_task, analysis.id)
@@ -602,6 +618,57 @@ def run_architecture_benchmark(
 
 
 # ── Phase 3: CI/CD PR Review Webhook ──
+
+@router.get("/{analysis_id}/report/{audience}")
+def get_executive_report(
+    analysis_id: str,
+    audience: str,
+    user: Annotated[Profile, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Audience-tailored briefing (cto, engineering_manager, investor, product_manager, architect)."""
+    a = db.get(Analysis, analysis_id)
+    if not a or not _user_can_access(db, user.id, a):
+        raise HTTPException(status_code=404, detail="Analysis not found")
+    findings = [
+        {
+            "agent": f.agent, "severity": f.severity, "title": f.title,
+            "summary": f.summary, "recommendation": f.recommendation,
+        }
+        for f in a.findings
+    ]
+    try:
+        return build_executive_report(audience, a.name, a.scores or {}, findings)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/{analysis_id}/docs/{doc_type}")
+def get_generated_doc(
+    analysis_id: str,
+    doc_type: str,
+    user: Annotated[Profile, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Generate architecture documentation (readme or adr) as markdown."""
+    a = db.get(Analysis, analysis_id)
+    if not a or not _user_can_access(db, user.id, a):
+        raise HTTPException(status_code=404, detail="Analysis not found")
+    findings = [
+        {
+            "agent": f.agent, "severity": f.severity, "title": f.title,
+            "summary": f.summary, "recommendation": f.recommendation,
+        }
+        for f in a.findings
+    ]
+    try:
+        return build_doc(
+            doc_type, a.name, a.diagram_nodes or [], a.diagram_edges or [],
+            a.scores or {}, findings, a.mediator_report,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 
 @router.post("/integrations/webhook/github")
 def github_pr_webhook(payload: dict):

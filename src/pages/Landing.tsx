@@ -1,19 +1,21 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowRight, Sparkles, ShieldCheck, Gauge, TrendingUp,
   HeartPulse, DollarSign, Wrench, Activity, FileImage, FileCode2,
   Workflow, Check, Github, Slack, Brain, Server,
-  ChevronDown, Star, Quote,
+  ChevronDown, Star, Quote, Menu,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Logo } from "@/components/Logo";
 import { AGENTS } from "@/lib/mock-data";
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from "@/components/ui/accordion";
 
-const ICONS: Record<string, any> = { TrendingUp, ShieldCheck, HeartPulse, Gauge, DollarSign, Wrench, Activity };
+const ICONS: Record<string, React.ComponentType<{ className?: string }>> = { TrendingUp, ShieldCheck, HeartPulse, Gauge, DollarSign, Wrench, Activity };
 
 // Illustrative testimonials — generic roles, not real-company endorsements.
 const TESTIMONIALS = [
@@ -71,6 +73,8 @@ const FREE_PROVIDERS = [
   { name: "OpenAI-compatible", desc: "Any provider with a compatible API endpoint", icon: Server },
 ];
 
+const GITHUB_URL = "https://github.com/KunjShah95/archmind-ai";
+
 export default function Landing() {
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -91,9 +95,12 @@ export default function Landing() {
 }
 
 function SiteHeader() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const closeMobile = () => setMobileOpen(false);
+
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 backdrop-blur-xl bg-background/70">
-      <div className="container flex h-14 items-center">
+      <div className="container flex h-14 items-center px-4">
         <Logo />
         <nav className="hidden md:flex items-center gap-7 ml-10 text-sm text-muted-foreground">
           <a href="#agents" className="hover:text-foreground transition-colors">Agents</a>
@@ -101,10 +108,37 @@ function SiteHeader() {
           <a href="#features" className="hover:text-foreground transition-colors">Features</a>
           <Link to="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
         </nav>
+
+
+
+
         <div className="ml-auto flex items-center gap-2">
-          <Link to="/login"><Button variant="ghost" size="sm">Sign in</Button></Link>
-          <Link to="/signup"><Button size="sm" className="bg-gradient-primary text-primary-foreground hover:opacity-90">Get started</Button></Link>
-        </div>
+            <Link to="/login" className="hidden sm:block"><Button variant="ghost" size="sm">Sign in</Button></Link>
+            <Link to="/signup"><Button size="sm" className="bg-gradient-primary text-primary-foreground hover:opacity-90">Get started</Button></Link>
+            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="md:hidden h-9 w-9" aria-label="Open menu">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-72 bg-background border-border/60">
+                <nav className="mt-8 flex flex-col gap-1 text-sm">
+                  <a href="#agents" onClick={closeMobile} className="rounded-lg px-3 py-2.5 text-muted-foreground hover:text-foreground hover:bg-card transition-colors">Agents</a>
+                  <a href="#workflow" onClick={closeMobile} className="rounded-lg px-3 py-2.5 text-muted-foreground hover:text-foreground hover:bg-card transition-colors">How it works</a>
+                  <a href="#features" onClick={closeMobile} className="rounded-lg px-3 py-2.5 text-muted-foreground hover:text-foreground hover:bg-card transition-colors">Features</a>
+                  <Link to="/pricing" onClick={closeMobile} className="rounded-lg px-3 py-2.5 text-muted-foreground hover:text-foreground hover:bg-card transition-colors">Pricing</Link>
+                </nav>
+                <div className="mt-6 flex flex-col gap-2 border-t border-border/60 pt-6">
+                  <Link to="/login" onClick={closeMobile}>
+                    <Button variant="outline" className="w-full">Sign in</Button>
+                  </Link>
+                  <Link to="/signup" onClick={closeMobile}>
+                    <Button className="w-full bg-gradient-primary text-primary-foreground hover:opacity-90">Get started</Button>
+                  </Link>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
       </div>
     </header>
   );
@@ -115,7 +149,7 @@ function Hero() {
     <section className="relative overflow-hidden">
       <div className="absolute inset-0 bg-hero pointer-events-none" />
       <div className="absolute inset-0 grid-bg pointer-events-none" />
-      <div className="container relative pt-20 pb-28 md:pt-32 md:pb-36">
+      <div className="container relative px-4 pt-20 pb-28 md:pt-32 md:pb-36">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -369,7 +403,7 @@ function FeatureGrid() {
   ];
   return (
     <section id="features" className="border-t border-border/60">
-      <div className="container py-24">
+      <div className="container px-4 py-24">
         <div className="max-w-2xl">
           <div className="text-xs uppercase tracking-widest text-primary">Built for production</div>
           <h2 className="mt-2 font-display text-4xl font-semibold tracking-tight">Everything you need to ship better systems.</h2>
@@ -509,21 +543,53 @@ function FAQ() {
 function SiteFooter() {
   return (
     <footer className="border-t border-border/60">
-      <div className="container py-12 grid grid-cols-2 md:grid-cols-5 gap-8">
+      <div className="container px-4 py-12 grid grid-cols-2 md:grid-cols-5 gap-8">
         <div className="col-span-2">
           <Logo />
           <p className="mt-3 text-sm text-muted-foreground max-w-xs">AI-powered architecture intelligence for engineering teams who care.</p>
           <div className="mt-4 flex gap-2">
-            <Button variant="ghost" size="icon" className="h-8 w-8"><Github className="h-4 w-4" /></Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8"><Slack className="h-4 w-4" /></Button>
+            <Button asChild variant="ghost" size="icon" className="h-8 w-8">
+              <a href={GITHUB_URL} target="_blank" rel="noreferrer" aria-label="ArchMind GitHub">
+                <Github className="h-4 w-4" />
+              </a>
+            </Button>
+            <Button asChild variant="ghost" size="icon" className="h-8 w-8">
+              <Link to="/settings" aria-label="Configure Slack integration">
+                <Slack className="h-4 w-4" />
+              </Link>
+            </Button>
           </div>
         </div>
-        <FooterCol title="Product" links={["Features", "Agents", "Pricing", "Changelog"]} />
-        <FooterCol title="Company" links={["About", "Blog", "Careers", "Contact"]} />
-        <FooterCol title="Legal" links={["Privacy", "Terms", "Security", "DPA"]} />
+        <FooterCol
+          title="Product"
+          links={[
+            { label: "Features", href: "#features" },
+            { label: "Agents", href: "#agents" },
+            { label: "Pricing", to: "/pricing" },
+            { label: "Changelog", href: `${GITHUB_URL}/releases`, external: true },
+          ]}
+        />
+        <FooterCol
+          title="Company"
+          links={[
+            { label: "About", to: "/" },
+            { label: "Blog", href: GITHUB_URL, external: true },
+            { label: "Careers", to: "/" },
+            { label: "Contact", href: `${GITHUB_URL}/issues`, external: true },
+          ]}
+        />
+        <FooterCol
+          title="Legal"
+          links={[
+            { label: "Privacy", to: "/privacy" },
+            { label: "Terms", to: "/terms" },
+            { label: "Security", to: "/security" },
+            { label: "DPA", to: "/privacy" },
+          ]}
+        />
       </div>
       <div className="border-t border-border/60">
-        <div className="container py-5 text-xs text-muted-foreground flex justify-between">
+        <div className="container px-4 py-5 text-xs text-muted-foreground flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <span>© 2026 ArchMind AI, Inc.</span>
           <span>Made for engineers who hate bad diagrams.</span>
         </div>
@@ -532,12 +598,29 @@ function SiteFooter() {
   );
 }
 
-function FooterCol({ title, links }: { title: string; links: string[] }) {
+type FooterLink = { label: string; href?: string; to?: string; external?: boolean };
+
+function FooterCol({ title, links }: { title: string; links: FooterLink[] }) {
   return (
     <div>
       <div className="text-sm font-medium">{title}</div>
       <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-        {links.map((l) => <li key={l}><a className="hover:text-foreground transition-colors" href="#">{l}</a></li>)}
+        {links.map((l) => (
+          <li key={l.label}>
+            {l.to ? (
+              <Link className="hover:text-foreground transition-colors" to={l.to}>{l.label}</Link>
+            ) : (
+              <a
+                className="hover:text-foreground transition-colors"
+                href={l.href}
+                target={l.external ? "_blank" : undefined}
+                rel={l.external ? "noreferrer" : undefined}
+              >
+                {l.label}
+              </a>
+            )}
+          </li>
+        ))}
       </ul>
     </div>
   );

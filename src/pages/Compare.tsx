@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { AGENTS, AgentKey, scoreColor } from "@/lib/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScoreRing } from "@/components/ScoreRing";
-import { ArrowRight, Minus, TrendingDown, TrendingUp } from "lucide-react";
+import { ArrowDown, ArrowRight, Minus, TrendingDown, TrendingUp } from "lucide-react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -51,14 +51,15 @@ export default function Compare() {
       <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-3 mb-6">
         <Picker value={idA!} onChange={setA} options={ready} label="Base" />
         <ArrowRight className="hidden md:block h-5 w-5 text-muted-foreground justify-self-center" />
+        <ArrowDown className="md:hidden h-5 w-5 text-muted-foreground justify-self-center" />
         <Picker value={idB!} onChange={(v) => { setB(v); if (v === idA) toast.message("Choose a different analysis for compare side"); }} options={ready} label="Compare" />
       </div>
 
       <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <div className="grid grid-cols-3 px-5 py-4 border-b border-border text-xs uppercase tracking-wider text-muted-foreground">
+        <div className="grid grid-cols-1 sm:grid-cols-3 px-5 py-4 border-b border-border text-xs uppercase tracking-wider text-muted-foreground">
           <div>Dimension</div>
-          <div className="text-center">{A.name}</div>
-          <div className="text-center">{B.name}</div>
+          <div className="text-center truncate">{A.name}</div>
+          <div className="text-center truncate">{B.name}</div>
         </div>
         {AGENTS.map((ag) => {
           const sA = A.scores[ag.key as AgentKey] ?? 0;
@@ -67,8 +68,8 @@ export default function Compare() {
           const TrendIcon = delta > 0 ? TrendingUp : delta < 0 ? TrendingDown : Minus;
           const trendColor = delta > 0 ? "text-success" : delta < 0 ? "text-danger" : "text-muted-foreground";
           return (
-            <div key={ag.key} className="grid grid-cols-3 items-center px-5 py-4 border-b border-border last:border-b-0">
-              <div className="text-sm font-medium">{ag.name.replace(" Agent", "")}</div>
+            <div key={ag.key} className="grid grid-cols-1 sm:grid-cols-3 items-center px-5 py-4 border-b border-border last:border-b-0">
+              <div className="text-sm font-medium truncate">{ag.name.replace(" Agent", "")}</div>
               <div className="flex items-center justify-center gap-3">
                 <ScoreRing value={sA} size={44} />
               </div>
@@ -93,7 +94,7 @@ function Picker({ value, onChange, options, label }: {
 }) {
   return (
     <div className="rounded-xl border border-border bg-card p-4">
-      <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">{label}</div>
+        <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2 truncate">{label}</div>
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger><SelectValue /></SelectTrigger>
         <SelectContent>

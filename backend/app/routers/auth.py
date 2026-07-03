@@ -21,7 +21,9 @@ def me(user: Annotated[Profile, Depends(get_current_user)]):
 
 @router.post("/demo-login", response_model=AuthResponse)
 def demo_login(body: DemoLoginRequest, db: Annotated[Session, Depends(get_db)]):
-    if not settings.dev_mode and not settings.supabase_jwt_secret:
+    # Demo login bypasses password verification entirely, so it must never be
+    # reachable outside local development regardless of other settings.
+    if not settings.dev_mode:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Demo login disabled")
 
     user_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, body.email.lower()))

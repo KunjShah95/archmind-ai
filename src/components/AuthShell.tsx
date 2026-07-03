@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Github } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { isSupabaseConfigured } from "@/lib/supabase";
+import { isDemoAuthEnabled, isSupabaseConfigured } from "@/lib/supabase";
 import { useState } from "react";
 
 export function AuthShell({ title, subtitle, cta, footer, alt, mode = "login" }: {
@@ -20,20 +20,32 @@ export function AuthShell({ title, subtitle, cta, footer, alt, mode = "login" }:
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [busy, setBusy] = useState(false);
+  const canUseEmailAuth = isSupabaseConfigured || isDemoAuthEnabled;
+
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const cleanEmail = email.trim().toLowerCase();
+    if (!EMAIL_RE.test(cleanEmail)) {
+      toast.error("Enter a valid email address (e.g. you@company.com).");
+      return;
+    }
+    if (password.length < 8) {
+      toast.error("Password must be at least 8 characters.");
+      return;
+    }
     setBusy(true);
     try {
       if (mode === "signup") {
-        const { needsConfirmation } = await signUpWithEmail(email, password, fullName || undefined);
+        const { needsConfirmation } = await signUpWithEmail(cleanEmail, password, fullName.trim() || undefined);
         if (needsConfirmation) {
           toast.success("Check your email to confirm your account, then sign in.");
           return;
         }
         toast.success("Account created");
       } else {
-        await signInWithEmail(email, password);
+        await signInWithEmail(cleanEmail, password);
         toast.success("Welcome back");
       }
       navigate("/dashboard");
@@ -83,9 +95,15 @@ export function AuthShell({ title, subtitle, cta, footer, alt, mode = "login" }:
           <h1 className="font-display text-3xl font-semibold tracking-tight">{title}</h1>
           <p className="mt-2 text-sm text-muted-foreground">{subtitle}</p>
 
-          {!isSupabaseConfigured && (
+          {!isSupabaseConfigured && isDemoAuthEnabled && (
             <div className="mt-4 rounded-md border border-warning/30 bg-warning/5 px-3 py-2 text-xs text-muted-foreground">
-              Local dev mode — email sign-in uses the API backend. Configure Supabase for production OAuth.
+              Demo auth is enabled. Configure Supabase for production OAuth.
+            </div>
+          )}
+
+          {!canUseEmailAuth && (
+            <div className="mt-4 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-muted-foreground">
+              Email auth is disabled. Please use Google/GitHub OAuth or contact support.
             </div>
           )}
 
@@ -116,9 +134,9 @@ export function AuthShell({ title, subtitle, cta, footer, alt, mode = "login" }:
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} />
+              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required minLength={8} />
             </div>
-            <Button type="submit" disabled={busy} className="w-full bg-gradient-primary text-primary-foreground hover:opacity-90">
+            <Button type="submit" disabled={busy || !canUseEmailAuth} className="w-full bg-gradient-primary text-primary-foreground hover:opacity-90">
               {busy ? "Please wait…" : cta}
             </Button>
           </form>
