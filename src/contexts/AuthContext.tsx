@@ -57,25 +57,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
-    let unsubscribeAuth: (() => void) | undefined;
-
     (async () => {
       if (isSupabaseConfigured && supabase) {
         const isOAuthRedirect = window.location.hash.includes("access_token") ||
                                 window.location.search.includes("code=");
 
         // Subscribe to onAuthStateChange BEFORE calling getSession()
-        // to avoid a race where SIGNED_IN fires between the two calls.
+        // to avoid a race where SIGNED_IN fires between the two calls. (Issue #2)
         const { data: sub } = supabase.auth.onAuthStateChange(async (_event, session) => {
           if (session?.access_token) {
             try {
               const profile = await syncTokenAndProfile(session.access_token);
               if (!cancelled) setUser(profile);
             } catch {
-              // Backend might be cold-starting — show error but keep the token
-              if (!cancelled) {
-                toast.error("Logged in but couldn't reach the server. Please try again.");
-              }
+              // Don't delete the token on API failure — show a toast instead (Issue #4)
+              toast.error("Logged in but couldn't reach the server. Please try again.");
               if (!cancelled) setUser(null);
             }
           } else if (!getStoredToken()) {
@@ -84,9 +80,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // SIGNED_IN fires after PKCE exchange completes → now safe to unlock UI
           if (!cancelled) setLoading(false);
         });
-        // Store unsubscribe in outer scope so the useEffect cleanup can call it.
-        // Returning from inside an async IIFE yields a Promise, not the cleanup fn.
-        unsubscribeAuth = () => sub.subscription.unsubscribe();
 
         // 1. Check for existing session
         const { data } = await supabase.auth.getSession();
@@ -95,11 +88,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const profile = await syncTokenAndProfile(data.session.access_token);
             if (!cancelled) setUser(profile);
           } catch {
-            // Backend might be cold-starting — show error but keep the token
-            if (!cancelled) {
-              toast.error("Logged in but couldn't reach the server. Please try again.");
-            }
-            if (!cancelled) setUser(null);
+            // Don't delete the token on API failure — show a toast instead (Issue #4)
+            toast.error("Logged in but couldn't reach the server. Please try again.");
           }
           if (!cancelled) setLoading(false);
           return;
@@ -111,17 +101,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (!cancelled) setLoading(false);
         }
 
-        return;
+        return () => { sub.subscription.unsubscribe(); };
       }
       if (!cancelled) {
         await refreshProfile();
         setLoading(false);
       }
     })();
-    return () => {
-      cancelled = true;
-      unsubscribeAuth?.();
-    };
+    return () => { cancelled = true; };
   }, [refreshProfile]);
 
   const signInWithEmail = useCallback(async (email: string, password: string) => {
