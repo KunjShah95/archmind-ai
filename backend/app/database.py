@@ -47,15 +47,17 @@ def get_db() -> Generator[Session, None, None]:
 
 
 def init_db() -> None:
-    """Bring the database schema up to date by running Alembic migrations.
-
-    Alembic is the sole schema authority — models must never be applied via
-    create_all(). New model changes require a migration
-    (`alembic revision --autogenerate`) which this upgrades to head on boot.
-    """
+    """Bring the database schema up to date by running Alembic migrations."""
+    import sys
+    import traceback
     from alembic import command
     from alembic.config import Config
 
     alembic_cfg = Config(str(BACKEND_ROOT / "alembic.ini"))
     alembic_cfg.set_main_option("script_location", str(BACKEND_ROOT / "alembic"))
-    command.upgrade(alembic_cfg, "head")
+    try:
+        command.upgrade(alembic_cfg, "head")
+    except Exception as exc:
+        print(f"ALEMBIC MIGRATION FAILED: {exc}", file=sys.stderr, flush=True)
+        traceback.print_exc(file=sys.stderr)
+        sys.exit(1)

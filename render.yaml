@@ -5,7 +5,7 @@ services:
     repo: https://github.com/KunjShah95/archmind-ai
     region: oregon
     plan: free
-    buildCommand: pip install -r backend/requirements.txt && cd backend && python -m alembic upgrade head
+    buildCommand: pip install -r backend/requirements.txt && python -c "import os,sys; url=os.environ.get('DATABASE_URL',''); sys.exit('DATABASE_URL not set or defaults to SQLite — set it in Render dashboard') if not url or url.startswith('sqlite') else None" && cd backend && python -m alembic upgrade head
     startCommand: cd backend && python -u -m uvicorn app.main:app --host 0.0.0.0 --port $PORT 2>&1
     healthCheckPath: /api/health
     envVars:

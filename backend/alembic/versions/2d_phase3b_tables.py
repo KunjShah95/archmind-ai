@@ -7,7 +7,6 @@ Create Date: 2026-07-03
 """
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy import inspect as sa_inspect
 
 
 revision: str = "2d_phase3b_tables"
@@ -16,10 +15,26 @@ branch_labels: str | None = None
 depends_on: str | None = None
 
 
-def upgrade() -> None:
-    existing = set(sa_inspect(op.get_bind()).get_table_names())
+def _has_table(conn, name: str) -> bool:
+    result = conn.execute(
+        sa.text("SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name=:n"),
+        {"n": name},
+    )
+    return result.fetchone() is not None
 
-    if "failed_analyses" not in existing:
+
+def _has_index(conn, name: str) -> bool:
+    result = conn.execute(
+        sa.text("SELECT 1 FROM pg_indexes WHERE schemaname='public' AND indexname=:n"),
+        {"n": name},
+    )
+    return result.fetchone() is not None
+
+
+def upgrade() -> None:
+    conn = op.get_bind()
+
+    if not _has_table(conn, "failed_analyses"):
         op.create_table(
             "failed_analyses",
             sa.Column("id", sa.String(36), primary_key=True),
@@ -31,9 +46,10 @@ def upgrade() -> None:
             sa.Column("retry_count", sa.Integer(), nullable=False, server_default="0"),
             sa.Column("next_retry_at", sa.DateTime(timezone=True), nullable=True),
         )
+    if not _has_index(conn, "ix_failed_analyses_analysis_id"):
         op.create_index(op.f("ix_failed_analyses_analysis_id"), "failed_analyses", ["analysis_id"])
 
-    if "share_links" not in existing:
+    if not _has_table(conn, "share_links"):
         op.create_table(
             "share_links",
             sa.Column("id", sa.String(36), primary_key=True),
@@ -44,10 +60,12 @@ def upgrade() -> None:
             sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
             sa.Column("expires_at", sa.DateTime(timezone=True), nullable=True),
         )
+    if not _has_index(conn, "ix_share_links_analysis_id"):
         op.create_index(op.f("ix_share_links_analysis_id"), "share_links", ["analysis_id"])
+    if not _has_index(conn, "ix_share_links_token"):
         op.create_index(op.f("ix_share_links_token"), "share_links", ["token"], unique=True)
 
-    if "audit_events" not in existing:
+    if not _has_table(conn, "audit_events"):
         op.create_table(
             "audit_events",
             sa.Column("id", sa.String(36), primary_key=True),
@@ -59,14 +77,17 @@ def upgrade() -> None:
             sa.Column("action", sa.String(64), nullable=False),
             sa.Column("entity_type", sa.String(32), nullable=False),
             sa.Column("entity_id", sa.String(36), nullable=False),
-            sa.Column("metadata", sa.JSON(), nullable=True),
+            sa.Column("event_metadata", sa.JSON(), nullable=True),
             sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         )
+    if not _has_index(conn, "ix_audit_events_workspace_id"):
         op.create_index(op.f("ix_audit_events_workspace_id"), "audit_events", ["workspace_id"])
+    if not _has_index(conn, "ix_audit_events_analysis_id"):
         op.create_index(op.f("ix_audit_events_analysis_id"), "audit_events", ["analysis_id"])
+    if not _has_index(conn, "ix_audit_events_action"):
         op.create_index(op.f("ix_audit_events_action"), "audit_events", ["action"])
 
-    if "finding_versions" not in existing:
+    if not _has_table(conn, "finding_versions"):
         op.create_table(
             "finding_versions",
             sa.Column("id", sa.String(36), primary_key=True),
@@ -79,6 +100,7 @@ def upgrade() -> None:
             sa.Column("scores", sa.JSON(), nullable=False, server_default="{}"),
             sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         )
+    if not _has_index(conn, "ix_finding_versions_analysis_id"):
         op.create_index(op.f("ix_finding_versions_analysis_id"), "finding_versions", ["analysis_id"])
 
 
