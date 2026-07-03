@@ -1,42 +1,42 @@
-import "@testing-library/jest-dom";
-import { server } from "./mocks/server";
+import '@testing-library/jest-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import React from 'react';
+import { server } from '../mocks/server';
 
-beforeAll(() => server.listen({ onUnhandledRequest: "warn" }));
+// Enable API mocking before tests.
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+
+// Reset any runtime request handlers we may add during the tests.
 afterEach(() => server.resetHandlers());
+
+// Disable API mocking after the tests run.
 afterAll(() => server.close());
 
-Object.defineProperty(window, "matchMedia", {
-  writable: true,
-  value: (query: string) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: () => {},
-    removeListener: () => {},
-    addEventListener: () => {},
-    removeEventListener: () => {},
-    dispatchEvent: () => false,
-  }),
+// Custom render function with providers
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
 });
 
-class MockIntersectionObserver {
-  observe = vi.fn();
-  unobserve = vi.fn();
-  disconnect = vi.fn();
-}
-Object.defineProperty(window, "IntersectionObserver", {
-  writable: true,
-  value: MockIntersectionObserver,
-});
+export const renderWithProviders = (
+  ui: React.ReactElement,
+  { route = '/' } = {}
+) => {
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[route]}>
+        {ui}
+      </MemoryRouter>
+    </QueryClientProvider>
+  );
+};
 
-class MockResizeObserver {
-  observe = vi.fn();
-  unobserve = vi.fn();
-  disconnect = vi.fn();
-}
-Object.defineProperty(window, "ResizeObserver", {
-  writable: true,
-  value: MockResizeObserver,
-});
-
-Element.prototype.scrollIntoView = vi.fn();
+// Re-export everything from @testing-library/react
+export * from '@testing-library/react';
+// Override render method
+export { renderWithProviders as render };

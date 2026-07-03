@@ -149,3 +149,17 @@ class ShareLink(Base):
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     analysis: Mapped["Analysis"] = relationship()
+
+
+class WorkspaceQuota(Base):
+    __tablename__ = "workspace_quotas"
+
+    workspace_id: Mapped[str] = mapped_column(String(36), ForeignKey("workspaces.id", ondelete="CASCADE"), primary_key=True)
+    max_analyses: Mapped[int] = mapped_column(Integer, default=10)
+    current_analyses: Mapped[int] = mapped_column(Integer, default=0)
+
+    workspace: Mapped["Workspace"] = relationship(back_populates="quota")
+
+
+# Add back-populates for Workspace
+Workspace.quota: Mapped["WorkspaceQuota"] = relationship(back_populates="workspace")

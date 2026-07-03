@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { api, Profile, setStoredToken } from "@/lib/api";
 import { isDemoAuthEnabled, isSupabaseConfigured, supabase, getStoredToken } from "@/lib/supabase";
 
@@ -56,32 +57,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
+    let unsubscribeAuth: (() => void) | undefined;
+
     (async () => {
       if (isSupabaseConfigured && supabase) {
         const isOAuthRedirect = window.location.hash.includes("access_token") ||
                                 window.location.search.includes("code=");
 
-        // 1. Check for existing session
-        const { data } = await supabase.auth.getSession();
-        if (data.session?.access_token) {
-          try {
-            const profile = await syncTokenAndProfile(data.session.access_token);
-            if (!cancelled) setUser(profile);
-          } catch {
-            setStoredToken(null);
-          }
-          if (!cancelled) setLoading(false);
-          return;
-        }
-
-        // 2. Subscribe to real-time auth events
+        // Subscribe to onAuthStateChange BEFORE calling getSession()
+        // to avoid a race where SIGNED_IN fires between the two calls.
         const { data: sub } = supabase.auth.onAuthStateChange(async (_event, session) => {
           if (session?.access_token) {
             try {
               const profile = await syncTokenAndProfile(session.access_token);
               if (!cancelled) setUser(profile);
             } catch {
-              setStoredToken(null);
+              // Backend might be cold-starting — show error but keep the token
+              if (!cancelled) {
+                toast.error("Logged in but couldn't reach the server. Please try again.");
+              }
               if (!cancelled) setUser(null);
             }
           } else if (!getStoredToken()) {
@@ -90,22 +84,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // SIGNED_IN fires after PKCE exchange completes → now safe to unlock UI
           if (!cancelled) setLoading(false);
         });
+        // Store unsubscribe in outer scope so the useEffect cleanup can call it.
+        // Returning from inside an async IIFE yields a Promise, not the cleanup fn.
+        unsubscribeAuth = () => sub.subscription.unsubscribe();
 
-        // 3. Normal loads (no OAuth redirect): INITIAL_SESSION fires async,
-        //    so we call setLoading(false) here to unlock the UI immediately.
+        // 1. Check for existing session
+        const { data } = await supabase.auth.getSession();
+        if (data.session?.access_token) {
+          try {
+            const profile = await syncTokenAndProfile(data.session.access_token);
+            if (!cancelled) setUser(profile);
+          } catch {
+            // Backend might be cold-starting — show error but keep the token
+            if (!cancelled) {
+              toast.error("Logged in but couldn't reach the server. Please try again.");
+            }
+            if (!cancelled) setUser(null);
+          }
+          if (!cancelled) setLoading(false);
+          return;
+        }
+
+        // 2. Normal loads (no OAuth redirect): unlock UI immediately.
         //    OAuth redirects: keep loading true until SIGNED_IN fires (step 2).
         if (!isOAuthRedirect) {
           if (!cancelled) setLoading(false);
         }
 
-        return () => { sub.subscription.unsubscribe(); };
+        return;
       }
       if (!cancelled) {
         await refreshProfile();
         setLoading(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      unsubscribeAuth?.();
+    };
   }, [refreshProfile]);
 
   const signInWithEmail = useCallback(async (email: string, password: string) => {

@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@/test/setup';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import AnalysisDetail from './AnalysisDetail';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 // Mock the api module
 vi.mock('@/lib/api', () => ({
@@ -78,7 +78,8 @@ describe('AnalysisDetail', () => {
   });
   
   it('shows error state when analysis fetch fails', async () => {
-    vi.mocked(require('@/lib/api').api.getAnalysis).mockRejectedValueOnce(new Error('Failed to fetch'));
+    const { api } = await import('@/lib/api');
+    vi.mocked(api.getAnalysis).mockRejectedValueOnce(new Error('Failed to fetch'));
     
     render(
       <MemoryRouter initialEntries={['/analyses/test-analysis']}>
