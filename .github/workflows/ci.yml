@@ -6,7 +6,7 @@ on:
 
 jobs:
   backend:
-    name: Backend tests
+    name: Backend — lint + test
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -18,11 +18,15 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements.txt
-      - run: python -m pytest tests/ --cov=app --cov-fail-under=50 -q
-      - run: docker build -t archmind-backend:ci .
+      - name: Lint (ruff)
+        run: pip install ruff && ruff check app/
+      - name: Test + coverage
+        run: python -m pytest tests/ --cov=app --cov-fail-under=80 -q
+      - name: Docker build check
+        run: docker build -t archmind-backend:ci .
 
   frontend:
-    name: Frontend build & tests
+    name: Frontend — lint + type-check + test + build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,5 +35,13 @@ jobs:
           node-version: "20"
           cache: npm
       - run: npm ci
-      - run: npx tsc --noEmit --skipLibCheck
-      - run: npm run build
+      - name: Lint (ESLint)
+        run: npx eslint src/ --ext .ts,.tsx --max-warnings 0
+      - name: Type check
+        run: npx tsc --noEmit --skipLibCheck
+      - name: Unit tests (Vitest)
+        run: npm run test -- --run
+      - name: Build
+        run: npm run build
+      - name: Docker build check
+        run: docker build -f frontend.Dockerfile -t archmind-frontend:ci .
