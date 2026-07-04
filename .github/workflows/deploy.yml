@@ -47,26 +47,21 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  deploy-staging:
-    name: Deploy to staging
+  smoke-test:
+    name: Smoke test (Render)
     needs: build-and-push
     runs-on: ubuntu-latest
-    environment: staging
     steps:
-      - name: Deploy backend
-        run: echo "Deploy backend image to staging — configure your platform here"
-      - name: Run migrations
-        run: echo "alembic upgrade head — run in staging container"
-      - name: Smoke test
+      - name: Health check
         run: |
-          sleep 10
-          curl -f https://api-staging.archmind.io/api/health || exit 1
-
-  deploy-prod:
-    name: Deploy to production
-    needs: deploy-staging
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - name: Blue-green deploy
-        run: echo "Flip prod traffic to new image — configure your platform here"
+          for i in 1 2 3 4 5; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://archmind-ai.onrender.com/api/health)
+            if [ "$STATUS" = "200" ]; then
+              echo "Health check passed (HTTP $STATUS)"
+              exit 0
+            fi
+            echo "Attempt $i: HTTP $STATUS — retrying in 15s"
+            sleep 15
+          done
+          echo "Health check failed after 5 attempts"
+          exit 1
