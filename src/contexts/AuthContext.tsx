@@ -12,7 +12,7 @@ type AuthState = {
     password: string,
     fullName?: string,
   ) => Promise<{ needsConfirmation: boolean }>;
-  signInWithOAuth: (provider: "google" | "github") => Promise<void>;
+  signInWithOAuth: (provider: "google") => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 };
@@ -160,7 +160,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { needsConfirmation: false };
   }, []);
 
-  const signInWithOAuth = useCallback(async (provider: "google" | "github") => {
+  const signInWithOAuth = useCallback(async (provider: "google") => {
     if (!isSupabaseConfigured || !supabase) {
       throw new Error("OAuth requires Supabase configuration. Use email sign-in for local dev.");
     }

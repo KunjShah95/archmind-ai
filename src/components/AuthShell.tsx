@@ -3,7 +3,6 @@ import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Github } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { isDemoAuthEnabled, isSupabaseConfigured } from "@/lib/supabase";
@@ -56,7 +55,7 @@ export function AuthShell({ title, subtitle, cta, footer, alt, mode = "login" }:
     }
   };
 
-  const oauth = async (provider: "google" | "github") => {
+  const oauth = async (provider: "google") => {
     setBusy(true);
     try {
       await signInWithOAuth(provider);
@@ -103,17 +102,14 @@ export function AuthShell({ title, subtitle, cta, footer, alt, mode = "login" }:
 
           {!canUseEmailAuth && (
             <div className="mt-4 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-muted-foreground">
-              Email auth is disabled. Please use Google/GitHub OAuth or contact support.
+              Email auth is disabled. Please use Google OAuth or contact support.
             </div>
           )}
 
-          <div className="mt-7 grid grid-cols-2 gap-2">
-            <Button variant="outline" disabled={busy || !isSupabaseConfigured} onClick={() => oauth("google")}>
+          <div className="mt-7">
+            <Button variant="outline" disabled={busy || !isSupabaseConfigured} onClick={() => oauth("google")} className="w-full">
               <svg className="h-4 w-4 mr-1.5" viewBox="0 0 24 24"><path fill="currentColor" d="M21.35 11.1H12v3.2h5.35c-.23 1.4-1.66 4.1-5.35 4.1-3.22 0-5.85-2.66-5.85-5.95s2.63-5.95 5.85-5.95c1.83 0 3.06.78 3.76 1.45l2.56-2.47C16.55 3.95 14.5 3 12 3 6.95 3 2.85 7.05 2.85 12s4.1 9 9.15 9c5.28 0 8.78-3.7 8.78-8.92 0-.6-.06-1.05-.13-1.48z"/></svg>
-              Google
-            </Button>
-            <Button variant="outline" disabled={busy || !isSupabaseConfigured} onClick={() => oauth("github")}>
-              <Github className="h-4 w-4 mr-1.5" /> GitHub
+              Continue with Google
             </Button>
           </div>
 
