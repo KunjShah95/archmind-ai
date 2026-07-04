@@ -1,5 +1,6 @@
 """Shared pytest fixtures — isolated in-memory DB for pipeline tests."""
 
+import uuid
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -75,7 +76,8 @@ def client(db):
 def auth_user(db):
     """Creates and returns a Profile + ensures they have a default workspace."""
     from app.auth import get_or_create_profile, ensure_default_workspace, create_access_token
-    profile = get_or_create_profile(db, "test-user-id", "test@example.com", "Test User")
+    user_id = uuid.uuid4()
+    profile = get_or_create_profile(db, str(user_id), "test@example.com", "Test User")
     ws = ensure_default_workspace(db, profile)
     token = create_access_token(profile.id, profile.email)
     return profile, token, ws
@@ -90,7 +92,8 @@ def seed_workspace(db, auth_user):
     db.add(ws2)
     db.flush()
     from app.models import Profile as ProfileModel
-    other = ProfileModel(id="other-user", email="other@example.com", full_name="Other User")
+    other_id = uuid.uuid4()
+    other = ProfileModel(id=str(other_id), email="other@example.com", full_name="Other User")
     db.add(other)
     db.flush()
     db.add(WorkspaceMember(workspace_id=ws2.id, user_id=other.id, role="owner"))

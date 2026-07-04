@@ -1,4 +1,5 @@
 """Tests for workspaces API endpoints."""
+import uuid
 import pytest
 
 from app.models import Analysis, Finding, Profile, Workspace, WorkspaceMember
@@ -63,7 +64,7 @@ class TestListMembers:
         headers = {"Authorization": f"Bearer {token}"}
 
         # Add another member
-        other = Profile(id="other-user", email="other@example.com", full_name="Other User")
+        other = Profile(id=str(uuid.uuid4()), email="other@example.com", full_name="Other User")
         db.add(other)
         db.flush()
         db.add(WorkspaceMember(workspace_id=ws.id, user_id=other.id, role="editor"))

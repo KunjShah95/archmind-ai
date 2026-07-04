@@ -1,5 +1,7 @@
 """Integration tests for the analysis pipeline (heuristic path, no LLM)."""
 
+import uuid
+
 from app.models import Analysis, Finding
 from app.services.agents import AGENT_KEYS
 from app.services.pipeline import run_analysis_pipeline
@@ -14,9 +16,9 @@ MERMAID = (
 
 def _make_analysis(db, **overrides):
     data = dict(
-        id="a-test-1",
-        workspace_id="w-1",
-        author_id="u-1",
+        id=str(uuid.uuid4()),
+        workspace_id=str(uuid.uuid4()),
+        author_id=str(uuid.uuid4()),
         name="Test diagram",
         source_type="text",
         diagram_type="Mermaid",

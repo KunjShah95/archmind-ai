@@ -105,6 +105,7 @@ def _try_vision_extract(file_path: str) -> tuple[list, list] | None:
     return llm_vision_extract_graph(image_bytes, mime)
 
 
+@contextmanager
 def step_context(db: Session, analysis: Analysis, step_name: str) -> Iterator[None]:
     """Wrap a pipeline step with error capture and persistence."""
     logger = get_logger(analysis_id=analysis.id, step=step_name)
@@ -254,10 +255,11 @@ def check_and_increment_quota(db: Session, user: Profile) -> None:
     """
     from sqlalchemy import text
 
+    uid_hex = user.id.replace("-", "") if isinstance(user.id, str) else user.id.hex
     result = db.execute(
         text("UPDATE profiles SET analyses_used = analyses_used + 1 "
              "WHERE id = :uid AND analyses_used < analyses_limit"),
-        {"uid": user.id},
+        {"uid": uid_hex},
     )
     if result.rowcount == 0:
         from fastapi import HTTPException
@@ -271,9 +273,10 @@ def check_and_increment_quota(db: Session, user: Profile) -> None:
 def release_analysis_slot(db: Session, user: Profile) -> None:
     """Compensating transaction: decrement usage on failure."""
     from sqlalchemy import text
+    uid_hex = user.id.replace("-", "") if isinstance(user.id, str) else user.id.hex
     db.execute(
         text("UPDATE profiles SET analyses_used = GREATEST(0, analyses_used - 1) WHERE id = :uid"),
-        {"uid": user.id},
+        {"uid": uid_hex},
     )
     db.commit()
 

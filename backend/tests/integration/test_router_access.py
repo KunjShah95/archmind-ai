@@ -1,5 +1,6 @@
 """Access control: non-members must get 404 on all analysis-id endpoints."""
 
+import uuid
 import pytest
 from fastapi.testclient import TestClient
 
@@ -56,7 +57,7 @@ class TestNonMemberAccess:
         db.refresh(a)
 
         from app.models import Profile as ProfileModel
-        intruder = ProfileModel(id="intruder-id", email="intruder@evil.com", full_name="Intruder")
+        intruder = ProfileModel(id=str(uuid.uuid4()), email="intruder@evil.com", full_name="Intruder")
         db.add(intruder)
         db.commit()
 

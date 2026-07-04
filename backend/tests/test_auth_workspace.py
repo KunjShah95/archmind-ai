@@ -1,11 +1,13 @@
 """Tests for default-workspace bootstrap on login."""
 
+import uuid
+
 from app.auth import ensure_default_workspace
 from app.models import Profile, WorkspaceMember
 
 
-def _profile(db, uid="u1", email="jane@acme.com", name="Jane Doe"):
-    p = Profile(id=uid, email=email, full_name=name, plan="hobby",
+def _profile(db, uid=None, email="jane@acme.com", name="Jane Doe"):
+    p = Profile(id=str(uid or uuid.uuid4()), email=email, full_name=name, plan="hobby",
                 analyses_used=0, analyses_limit=10)
     db.add(p)
     db.commit()
