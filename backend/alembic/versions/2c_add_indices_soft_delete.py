@@ -9,6 +9,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 
 revision: str = "2c_add_indices_soft_delete"
@@ -23,7 +24,7 @@ def upgrade() -> None:
     op.add_column("findings", sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True))
 
     # Add audit fields to findings
-    op.add_column("findings", sa.Column("modified_by", sa.String(36), nullable=True))
+    op.add_column("findings", sa.Column("modified_by", postgresql.UUID(), nullable=True))
     op.add_column("findings", sa.Column("modified_at", sa.DateTime(timezone=True), nullable=True))
     op.add_column("findings", sa.Column("confidence", sa.Float(), nullable=True))
 

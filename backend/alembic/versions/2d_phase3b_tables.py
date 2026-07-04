@@ -7,6 +7,7 @@ Create Date: 2026-07-03
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 
 revision: str = "2d_phase3b_tables"
@@ -37,8 +38,8 @@ def upgrade() -> None:
     if not _has_table(conn, "failed_analyses"):
         op.create_table(
             "failed_analyses",
-            sa.Column("id", sa.String(36), primary_key=True),
-            sa.Column("analysis_id", sa.String(36), sa.ForeignKey("analyses.id"), nullable=False),
+            sa.Column("id", postgresql.UUID(), primary_key=True),
+            sa.Column("analysis_id", postgresql.UUID(), sa.ForeignKey("analyses.id"), nullable=False),
             sa.Column("error_code", sa.String(64), nullable=True),
             sa.Column("error_message", sa.Text(), nullable=True),
             sa.Column("failed_step", sa.String(64), nullable=True),
@@ -52,11 +53,11 @@ def upgrade() -> None:
     if not _has_table(conn, "share_links"):
         op.create_table(
             "share_links",
-            sa.Column("id", sa.String(36), primary_key=True),
-            sa.Column("analysis_id", sa.String(36), sa.ForeignKey("analyses.id"), nullable=False),
+            sa.Column("id", postgresql.UUID(), primary_key=True),
+            sa.Column("analysis_id", postgresql.UUID(), sa.ForeignKey("analyses.id"), nullable=False),
             sa.Column("token", sa.String(64), nullable=False, unique=True),
             sa.Column("scope", sa.String(32), nullable=False, server_default="read"),
-            sa.Column("created_by", sa.String(36), nullable=True),
+            sa.Column("created_by", postgresql.UUID(), nullable=True),
             sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
             sa.Column("expires_at", sa.DateTime(timezone=True), nullable=True),
         )
@@ -68,15 +69,15 @@ def upgrade() -> None:
     if not _has_table(conn, "audit_events"):
         op.create_table(
             "audit_events",
-            sa.Column("id", sa.String(36), primary_key=True),
-            sa.Column("workspace_id", sa.String(36), nullable=True),
-            sa.Column("analysis_id", sa.String(36), nullable=True),
-            sa.Column("actor_id", sa.String(36), nullable=True),
+            sa.Column("id", postgresql.UUID(), primary_key=True),
+            sa.Column("workspace_id", postgresql.UUID(), nullable=True),
+            sa.Column("analysis_id", postgresql.UUID(), nullable=True),
+            sa.Column("actor_id", postgresql.UUID(), nullable=True),
             sa.Column("actor_name", sa.String(255), nullable=False),
             sa.Column("actor_email", sa.String(255), nullable=False),
             sa.Column("action", sa.String(64), nullable=False),
             sa.Column("entity_type", sa.String(32), nullable=False),
-            sa.Column("entity_id", sa.String(36), nullable=False),
+            sa.Column("entity_id", postgresql.UUID(), nullable=False),
             sa.Column("event_metadata", sa.JSON(), nullable=True),
             sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         )
@@ -90,12 +91,12 @@ def upgrade() -> None:
     if not _has_table(conn, "finding_versions"):
         op.create_table(
             "finding_versions",
-            sa.Column("id", sa.String(36), primary_key=True),
-            sa.Column("analysis_id", sa.String(36), sa.ForeignKey("analyses.id"), nullable=False),
+            sa.Column("id", postgresql.UUID(), primary_key=True),
+            sa.Column("analysis_id", postgresql.UUID(), sa.ForeignKey("analyses.id"), nullable=False),
             sa.Column("version_no", sa.Integer(), nullable=False),
             sa.Column("change_type", sa.String(32), nullable=False),
             sa.Column("summary", sa.String(512), nullable=False),
-            sa.Column("author_id", sa.String(36), nullable=False),
+            sa.Column("author_id", postgresql.UUID(), nullable=False),
             sa.Column("author_name", sa.String(255), nullable=False),
             sa.Column("scores", sa.JSON(), nullable=False, server_default="{}"),
             sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
