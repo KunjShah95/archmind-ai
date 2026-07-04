@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: archmind-worker
+  namespace: archmind
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: archmind-worker
+  template:
+    metadata:
+      labels:
+        app: archmind-worker
+    spec:
+      containers:
+      - name: archmind-worker
+        image: archmind/worker:latest
+        command: ["python", "-m", "arq", "app.worker.WorkerSettings"]
+        envFrom:
+        - configMapRef:
+            name: archmind-config
+        - secretRef:
+            name: archmind-secrets
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+---
+# KEDA ScaledObject: scales worker replicas based on Redis queue depth.
+# Requires KEDA operator installed in the cluster.
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: archmind-worker-scaledobject
+  namespace: archmind
+spec:
+  scaleTargetRef:
+    name: archmind-worker
+  minReplicaCount: 1
+  maxReplicaCount: 20
+  cooldownPeriod: 60
+  triggers:
+  - type: redis
+    metadata:
+      address: archmind-redis-svc.archmind.svc.cluster.local:6379
+      listName: arq:queue:archmind
+      listLength: "5"
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: archmind-worker-pdb
+  namespace: archmind
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: archmind-worker

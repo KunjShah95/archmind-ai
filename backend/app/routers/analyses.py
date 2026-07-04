@@ -1,12 +1,13 @@
 import json
 import secrets
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import Response
 from sqlalchemy.orm import Session, joinedload
 
-from app.auth import get_current_user
+from app.auth import check_min_role, get_current_user, log_audit_event
 from app.database import get_db
 from app.limiter import limiter
 from app.models import Analysis, ChatMessage, Finding, Profile, ShareLink, WorkspaceMember
@@ -61,6 +62,26 @@ from app.config import get_settings
 
 router = APIRouter(prefix="/api/analyses", tags=["analyses"])
 settings = get_settings()
+
+_ALLOWED_EXTENSIONS = {
+    ".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp",
+    ".txt", ".md", ".mmd", ".puml",
+    ".tf", ".yaml", ".yml", ".json", ".xml", ".drawio",
+}
+_ALLOWED_MIMES = {
+    "image/png", "image/jpeg", "image/gif", "image/svg+xml", "image/webp",
+    "text/plain", "text/markdown", "text/x-yaml", "application/x-yaml",
+    "application/json", "application/xml", "text/xml",
+}
+
+
+def _validate_upload(file: UploadFile) -> None:
+    ext = Path(file.filename or "").suffix.lower()
+    if ext not in _ALLOWED_EXTENSIONS:
+        raise HTTPException(status_code=415, detail=f"File type {ext!r} not supported")
+    mime = (file.content_type or "").split(";")[0].strip()
+    if mime and mime not in _ALLOWED_MIMES:
+        raise HTTPException(status_code=415, detail=f"MIME type {mime!r} not supported")
 
 
 def _to_summary(a: Analysis, db: Session) -> AnalysisSummary:
@@ -139,6 +160,7 @@ def create_analysis_json(
     if ws_id:
         if not db.query(WorkspaceMember).filter(WorkspaceMember.workspace_id == ws_id, WorkspaceMember.user_id == user.id).first():
             raise HTTPException(status_code=403, detail="Not a member of this workspace")
+        check_min_role(db, user.id, ws_id, "editor")
     else:
         ws_id = ensure_default_workspace(db, user).id
 
@@ -156,6 +178,11 @@ def create_analysis_json(
         status="queued",
     )
     db.add(analysis)
+    db.flush()
+    log_audit_event(db, actor_id=user.id, action="analysis.create",
+                    entity_type="analysis", entity_id=analysis.id,
+                    metadata={"name": body.name, "source_type": body.source_type},
+                    ip_address=request.client.host if request.client else None)
     db.commit()
     db.refresh(analysis)
     background_tasks.add_task(_run_pipeline_task, analysis.id)
@@ -163,7 +190,9 @@ def create_analysis_json(
 
 
 @router.post("/upload", response_model=AnalysisSummary)
+@limiter.limit("20/minute")
 async def create_analysis_upload(
+    request: Request,
     background_tasks: BackgroundTasks,
     user: Annotated[Profile, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
@@ -171,6 +200,7 @@ async def create_analysis_upload(
     name: str = Form("Untitled architecture"),
     workspace_id: str | None = Form(None),
 ):
+    _validate_upload(file)
     check_and_increment_quota(db, user)
     content = await file.read()
     if len(content) > settings.max_upload_bytes:
@@ -179,6 +209,7 @@ async def create_analysis_upload(
         raise HTTPException(status_code=400, detail="Empty file")
 
     ws_id = workspace_id or ensure_default_workspace(db, user).id
+    check_min_role(db, user.id, ws_id, "editor")
     path = save_upload(content, file.filename or "diagram.png")
     diagram_type = detect_diagram_type(None, file.filename)
 
@@ -192,6 +223,11 @@ async def create_analysis_upload(
         status="queued",
     )
     db.add(analysis)
+    db.flush()
+    log_audit_event(db, actor_id=user.id, action="analysis.create",
+                    entity_type="analysis", entity_id=analysis.id,
+                    metadata={"name": name, "source_type": "upload", "filename": file.filename},
+                    ip_address=request.client.host if request.client else None)
     db.commit()
     db.refresh(analysis)
     background_tasks.add_task(_run_pipeline_task, analysis.id)

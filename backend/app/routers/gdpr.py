@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse, Response
 from sqlalchemy.orm import Session
 
-from app.auth import get_current_user
+from app.auth import get_current_user, log_audit_event
 from app.database import get_db
 from app.limiter import limiter
 from app.models import (
@@ -87,6 +87,10 @@ def export_user_data(
         "workspaces": workspaces_data,
     }
 
+    log_audit_event(db, actor_id=str(user.id), action="gdpr.export",
+                    entity_type="profile", entity_id=str(user.id),
+                    ip_address=request.client.host if request.client else None)
+    db.commit()
     return JSONResponse(
         content=body,
         headers={
@@ -189,6 +193,9 @@ def delete_account(
     # Delete the profile last (other tables reference it).
     db.delete(user)
 
+    log_audit_event(db, actor_id=str(user.id), action="gdpr.delete",
+                    entity_type="profile", entity_id=str(user.id),
+                    ip_address=request.client.host if request.client else None)
     db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)

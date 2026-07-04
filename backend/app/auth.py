@@ -191,3 +191,41 @@ def get_current_user(
 def slugify(name: str) -> str:
     s = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
     return s or "workspace"
+
+
+ROLE_ORDER: dict[str, int] = {"viewer": 0, "editor": 1, "owner": 2}
+
+
+def check_min_role(db: Session, user_id: str, workspace_id: str, min_role: str) -> None:
+    member = (
+        db.query(WorkspaceMember)
+        .filter(
+            WorkspaceMember.workspace_id == workspace_id,
+            WorkspaceMember.user_id == user_id,
+        )
+        .first()
+    )
+    if not member or ROLE_ORDER.get(member.role, -1) < ROLE_ORDER.get(min_role, 99):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
+
+
+def log_audit_event(
+    db: Session,
+    *,
+    actor_id: str | None,
+    action: str,
+    entity_type: str | None = None,
+    entity_id: str | None = None,
+    metadata: dict | None = None,
+    ip_address: str | None = None,
+) -> None:
+    from app.models import AuditLog
+    db.add(AuditLog(
+        actor_id=actor_id,
+        action=action,
+        entity_type=entity_type,
+        entity_id=entity_id,
+        event_metadata=metadata,
+        ip_address=ip_address,
+    ))
+    db.flush()

@@ -60,6 +60,14 @@ async def security_headers(request: Request, call_next):
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' https://cdn.vercel-insights.com; "
+        "style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data: https:; "
+        "connect-src 'self' https://vitals.vercel-insights.com; "
+        "frame-ancestors 'none'"
+    )
     # Add HSTS header for non-localhost deployments
     if request.url.hostname not in ("localhost", "127.0.0.1"):
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
