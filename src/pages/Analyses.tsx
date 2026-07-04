@@ -29,9 +29,14 @@ export default function Analyses() {
         description="Every diagram your team has reviewed."
         actions={
           <Link to="/upload">
-            <Button className="bg-gradient-primary text-primary-foreground hover:opacity-90">
-              <Plus className="h-4 w-4 mr-1.5" /> New analysis
-            </Button>
+            <button
+              className="inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold text-white transition-all"
+              style={{ background: "hsl(16 76% 52%)" }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 4px 14px hsl(16 76% 52% / 0.35)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+            >
+              <Plus className="h-4 w-4" /> New analysis
+            </button>
           </Link>
         }
       />

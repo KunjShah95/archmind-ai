@@ -119,8 +119,8 @@ export default function Upload() {
               drag ? "border-primary bg-primary/5" : "border-border bg-card/40 hover:bg-card"
             )}
           >
-            <div className="mx-auto h-10 w-10 md:h-14 md:w-14 rounded-xl bg-gradient-primary grid place-items-center shadow-glow">
-              <UploadCloud className="h-5 w-5 md:h-7 md:w-7 text-primary-foreground" />
+            <div className="mx-auto h-10 w-10 md:h-14 md:w-14 rounded-xl grid place-items-center font-semibold text-white" style={{ background: "hsl(222 62% 11%)" }}>
+              <UploadCloud className="h-5 w-5 md:h-7 md:w-7" />
             </div>
             <h3 className="mt-4 md:mt-5 font-display text-base md:text-xl font-semibold">Drop your architecture or config file here</h3>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -198,13 +198,16 @@ export default function Upload() {
 
       <div className="mt-6 flex justify-end gap-2">
         <Button variant="outline" onClick={() => navigate(-1)}>Cancel</Button>
-        <Button
+        <button
           disabled={!canStart || createMutation.isPending}
           onClick={() => createMutation.mutate()}
-          className="bg-gradient-primary text-primary-foreground hover:opacity-90"
+          className="inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ background: "hsl(16 76% 52%)" }}
+          onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 4px 14px hsl(16 76% 52% / 0.35)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
         >
           {createMutation.isPending ? <><Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> Starting…</> : "Start analysis"}
-        </Button>
+        </button>
       </div>
     </div>
   );

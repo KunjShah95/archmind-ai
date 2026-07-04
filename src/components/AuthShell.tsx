@@ -68,20 +68,33 @@ export function AuthShell({ title, subtitle, cta, footer, alt, mode = "login" }:
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
-      <div className="hidden lg:block relative bg-card border-r border-border overflow-hidden">
-        <div className="absolute inset-0 bg-hero" />
-        <div className="absolute inset-0 grid-bg" />
+      <div
+        className="hidden lg:flex flex-col border-r overflow-hidden dark"
+        style={{
+          background: "hsl(222 62% 11%)",
+          backgroundImage: "radial-gradient(hsl(220 30% 35% / 0.35) 1px, transparent 1px)",
+          backgroundSize: "28px 28px",
+        }}
+      >
         <div className="relative p-10 flex flex-col h-full">
           <Logo />
           <div className="mt-auto max-w-md">
-            <blockquote className="font-display text-2xl leading-snug">
+            <blockquote
+              className="font-display leading-snug text-foreground italic"
+              style={{ fontSize: "1.4rem" }}
+            >
               "We replaced a 90-minute design review with a 4-minute ArchMind run.
               The agents catch things our staff engineers miss."
             </blockquote>
-            <div className="mt-5 flex items-center gap-3">
-              <div className="h-9 w-9 rounded-full bg-gradient-primary grid place-items-center text-sm font-semibold text-primary-foreground">RK</div>
+            <div className="mt-6 flex items-center gap-3">
+              <div
+                className="h-9 w-9 rounded-full grid place-items-center text-sm font-bold flex-shrink-0"
+                style={{ background: "hsl(16 76% 52%)", color: "white" }}
+              >
+                RK
+              </div>
               <div>
-                <div className="text-sm font-medium">Riya Kapoor</div>
+                <div className="text-sm font-semibold text-foreground">Riya Kapoor</div>
                 <div className="text-xs text-muted-foreground">Principal Engineer · Lumen Labs</div>
               </div>
             </div>
@@ -132,9 +145,16 @@ export function AuthShell({ title, subtitle, cta, footer, alt, mode = "login" }:
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required minLength={8} />
             </div>
-            <Button type="submit" disabled={busy || !canUseEmailAuth} className="w-full bg-gradient-primary text-primary-foreground hover:opacity-90">
+            <button
+              type="submit"
+              disabled={busy || !canUseEmailAuth}
+              className="w-full rounded-md py-2.5 text-sm font-semibold text-white transition-all disabled:opacity-50"
+              style={{ background: "hsl(16 76% 52%)" }}
+              onMouseEnter={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 4px 14px hsl(16 76% 52% / 0.38)"; } }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+            >
               {busy ? "Please wait…" : cta}
-            </Button>
+            </button>
           </form>
 
           <div className="mt-5 text-sm text-muted-foreground">{alt}</div>

@@ -158,7 +158,7 @@ export default function PairArchitect() {
             <Button
               onClick={() => handleSendMessage(input)}
               disabled={!input.trim() || pairMutation.isPending}
-              className="bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow shrink-0 h-10 px-4"
+              className="text-white" style={{ background: "hsl(16 76% 52%)" }}
             >
               {pairMutation.isPending ? (
                 <Loader2 className="h-4.5 w-4.5 animate-spin" />

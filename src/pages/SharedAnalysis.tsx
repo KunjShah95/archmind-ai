@@ -111,9 +111,15 @@ export default function SharedAnalysis() {
             <div className="rounded-xl border border-border bg-gradient-to-br from-primary/5 to-transparent p-6 text-center space-y-3">
               <h3 className="font-display font-semibold">Want to analyze your own architecture?</h3>
               <p className="text-sm text-muted-foreground">Sign up free and get 10 analyses per month.</p>
-              <Button className="bg-gradient-primary text-primary-foreground" asChild>
-                <a href="/signup">Start for free</a>
-              </Button>
+              <a
+                href="/signup"
+                className="inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold text-white transition-all"
+                style={{ background: "hsl(16 76% 52%)" }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 4px 14px hsl(16 76% 52% / 0.35)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+              >
+                Start for free
+              </a>
             </div>
           </div>
         )}

@@ -1,6 +1,6 @@
-import type { Analysis, Finding } from '@/lib/api';
+import type { AnalysisDetail, Finding } from '@/lib/api';
 
-export const createMockAnalysis = (id: string, name?: string): Analysis => ({
+export const createMockAnalysis = (id: string, name?: string): AnalysisDetail => ({
   id,
   name: name || `Analysis ${id}`,
   status: 'ready',
@@ -8,13 +8,29 @@ export const createMockAnalysis = (id: string, name?: string): Analysis => ({
   updated_at: new Date().toISOString(),
   workspace_id: 'workspace-1',
   author_id: 'user-1',
+  workspace: 'Default Workspace',
+  author: 'Test User',
+  uploaded_at: new Date().toISOString(),
   diagram_url: '',
   score: 75,
   findings_count: { low: 2, medium: 1, high: 0, critical: 0 },
+  findings: [],
+  scores: {
+    cost: 75,
+    scalability: 80,
+    security: 90,
+    reliability: 85,
+  },
+  diagram_nodes: [],
+  diagram_edges: [],
   agent_meta: {},
   error_code: null,
   error_message: null,
   failed_step: null,
+  source_type: 'upload',
+  mediator_report: null,
+  generation_prompt: null,
+  generated_artifacts: null,
 });
 
 export const createMockFinding = (analysisId: string, agent: string, severity: string): Finding => ({
@@ -22,7 +38,8 @@ export const createMockFinding = (analysisId: string, agent: string, severity: s
   analysis_id: analysisId,
   agent: agent as any,
   title: `${agent} finding`,
-  description: `This is a ${severity} severity finding from the ${agent} agent.`,
+  summary: `This is a ${severity} severity finding from the ${agent} agent.`,
+  recommendation: `Fix the ${agent} issue.`,
   severity: severity as any,
   start_line: null,
   end_line: null,

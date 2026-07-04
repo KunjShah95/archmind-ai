@@ -29,7 +29,7 @@ export default function Settings() {
           <SectionCard title="Profile" description="Update your personal information.">
             <div className="flex items-center gap-4 mb-5">
               <Avatar className="h-16 w-16">
-                <AvatarFallback className="bg-gradient-primary text-primary-foreground text-lg">AC</AvatarFallback>
+                <AvatarFallback className="text-lg font-bold text-white" style={{ background: "hsl(16 76% 52%)" }}>AC</AvatarFallback>
               </Avatar>
               <Button variant="outline" size="sm">Change avatar</Button>
             </div>
@@ -40,7 +40,13 @@ export default function Settings() {
               <Field label="Company" defaultValue="ArchMind AI" />
             </div>
             <div className="mt-6 flex justify-end">
-              <Button onClick={() => toast.success("Saved")} className="bg-gradient-primary text-primary-foreground">Save changes</Button>
+              <button
+                onClick={() => toast.success("Saved")}
+                className="inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold text-white transition-all"
+                style={{ background: "hsl(16 76% 52%)" }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 4px 14px hsl(16 76% 52% / 0.35)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+              >Save changes</button>
             </div>
           </SectionCard>
         </TabsContent>
@@ -137,7 +143,13 @@ function SlackIntegrationCard() {
         >
           {testMutation.isPending ? "Sending…" : "Send test message"}
         </Button>
-        <Button size="sm" onClick={save} className="bg-gradient-primary text-primary-foreground">Save</Button>
+        <button
+          onClick={save}
+          className="inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold text-white transition-all"
+          style={{ background: "hsl(16 76% 52%)" }}
+          onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 4px 14px hsl(16 76% 52% / 0.35)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+        >Save</button>
       </div>
     </SectionCard>
   );

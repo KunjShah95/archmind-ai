@@ -33,7 +33,7 @@ function EventRow({ event }: { event: AuditEvent }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <Avatar className="h-5 w-5 shrink-0">
-            <AvatarFallback className="text-[9px] bg-gradient-primary text-primary-foreground">
+            <AvatarFallback className="text-[9px] font-bold text-white" style={{ background: "hsl(16 76% 52%)" }}>
               {event.actor.slice(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>

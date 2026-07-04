@@ -117,9 +117,14 @@ export default function WorkspaceDetail() {
               </Button>
               <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
                 <DialogTrigger asChild>
-                  <Button size="sm" className="bg-gradient-primary text-primary-foreground hover:opacity-90">
-                    <Plus className="h-3.5 w-3.5 mr-1.5" /> Invite member
-                  </Button>
+                  <button
+                    className="inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold text-white transition-all"
+                    style={{ background: "hsl(16 76% 52%)" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 4px 14px hsl(16 76% 52% / 0.35)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Invite member
+                  </button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
@@ -184,7 +189,7 @@ export default function WorkspaceDetail() {
               return (
                 <div key={m.id} className="flex items-center gap-4 p-4">
                   <Avatar className="h-9 w-9 shrink-0">
-                    <AvatarFallback className="bg-gradient-primary text-primary-foreground text-xs">
+                    <AvatarFallback className="text-xs font-bold text-white" style={{ background: "hsl(16 76% 52%)" }}>
                       {(m.full_name || m.email).slice(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>

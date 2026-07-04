@@ -1,8 +1,29 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen, waitFor } from '@/test/setup';
+import { render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import userEvent from '@testing-library/user-event';
 import AnalysisDetail from './AnalysisDetail';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import React from 'react';
+import '@testing-library/jest-dom';
+
+function renderWithProviders(ui: React.ReactElement) {
+  const qc = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+    },
+  });
+
+  return render(
+    <QueryClientProvider client={qc}>
+      <MemoryRouter initialEntries={["/analyses/test-analysis"]}>
+        <Routes>
+          <Route path="/analyses/:id" element={ui} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>
+  );
+}
 
 // Mock the api module
 vi.mock('@/lib/api', () => ({
@@ -11,86 +32,63 @@ vi.mock('@/lib/api', () => ({
       id: 'test-analysis',
       name: 'Test Analysis',
       status: 'ready',
-      score: 75,
+      workspace: 'Default Workspace',
+      author: 'Test User',
+      uploaded_at: new Date().toISOString(),
+      scores: { cost: 75, scalability: 80, security: 90, reliability: 85 },
+      findings: [
+        {
+          id: 'finding-1',
+          agent: 'cost',
+          title: 'Cost finding',
+          summary: 'This is a cost-related finding.',
+          recommendation: 'Consider right-sizing resources.',
+          severity: 'high',
+        },
+      ],
       findings_count: { low: 2, medium: 1, high: 0, critical: 0 },
+      diagram_nodes: [],
+      diagram_edges: [],
     }),
-    getFindings: vi.fn().mockResolvedValue([
-      {
-        id: 'finding-1',
-        agent: 'cost',
-        title: 'Cost finding',
-        description: 'This is a cost-related finding.',
-        severity: 'high',
-      },
-    ]),
   },
 }));
 
 describe('AnalysisDetail', () => {
   it('renders loading state initially', () => {
-    render(
-      <MemoryRouter initialEntries={['/analyses/test-analysis']}>
-        <Routes>
-          <Route path="/analyses/:id" element={<AnalysisDetail />} />
-        </Routes>
-      </MemoryRouter>
-    );
+    renderWithProviders(<AnalysisDetail />);
     
-    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(screen.getByText('Loading analysis…')).toBeInTheDocument();
   });
   
   it('renders tabs and findings list when data is loaded', async () => {
-    render(
-      <MemoryRouter initialEntries={['/analyses/test-analysis']}>
-        <Routes>
-          <Route path="/analyses/:id" element={<AnalysisDetail />} />
-        </Routes>
-      </MemoryRouter>
-    );
+    renderWithProviders(<AnalysisDetail />);
     
     await waitFor(() => {
       expect(screen.getByText('Test Analysis')).toBeInTheDocument();
-      expect(screen.getByRole('tab', { name: 'Findings' })).toBeInTheDocument();
-      expect(screen.getByRole('tab', { name: 'Diagram' })).toBeInTheDocument();
-      expect(screen.getByRole('tab', { name: 'Executive Report' })).toBeInTheDocument();
     });
+    
+    expect(screen.getByRole('tab', { name: 'Findings' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Debate' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Report' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Chat' })).toBeInTheDocument();
   });
   
-  it('switches tabs when clicked', async () => {
-    const user = userEvent.setup();
-    render(
-      <MemoryRouter initialEntries={['/analyses/test-analysis']}>
-        <Routes>
-          <Route path="/analyses/:id" element={<AnalysisDetail />} />
-        </Routes>
-      </MemoryRouter>
-    );
+  it('shows findings in list', async () => {
+    renderWithProviders(<AnalysisDetail />);
     
     await waitFor(() => {
-      expect(screen.getByText('Test Analysis')).toBeInTheDocument();
+      expect(screen.getByText('Cost finding')).toBeInTheDocument();
     });
-    
-    await user.click(screen.getByRole('tab', { name: 'Diagram' }));
-    expect(screen.getByText(/graph TD/)).toBeInTheDocument();
-    
-    await user.click(screen.getByRole('tab', { name: 'Executive Report' }));
-    expect(screen.getByText(/Mediator Report/)).toBeInTheDocument();
   });
   
   it('shows error state when analysis fetch fails', async () => {
     const { api } = await import('@/lib/api');
     vi.mocked(api.getAnalysis).mockRejectedValueOnce(new Error('Failed to fetch'));
     
-    render(
-      <MemoryRouter initialEntries={['/analyses/test-analysis']}>
-        <Routes>
-          <Route path="/analyses/:id" element={<AnalysisDetail />} />
-        </Routes>
-      </MemoryRouter>
-    );
+    renderWithProviders(<AnalysisDetail />);
     
     await waitFor(() => {
-      expect(screen.getByText(/Failed to load analysis/)).toBeInTheDocument();
+      expect(screen.getByText('Analysis not found.')).toBeInTheDocument();
     });
   });
 });

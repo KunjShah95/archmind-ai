@@ -1,0 +1,43 @@
+- generic [ref=e2]:
+  - region "Notifications alt+T"
+  - generic [ref=e528]:
+    - generic [ref=e532]:
+      - link "ArchMind AI" [ref=e533] [cursor=pointer]:
+        - /url: /
+        - img [ref=e535]
+        - generic [ref=e539]: ArchMind AI
+      - generic [ref=e540]:
+        - blockquote [ref=e541]: "\"We replaced a 90-minute design review with a 4-minute ArchMind run. The agents catch things our staff engineers miss.\""
+        - generic [ref=e542]:
+          - generic [ref=e543]: RK
+          - generic [ref=e544]:
+            - generic [ref=e545]: Riya Kapoor
+            - generic [ref=e546]: Principal Engineer · Lumen Labs
+    - generic [ref=e548]:
+      - heading "Welcome back" [level=1] [ref=e549]
+      - paragraph [ref=e550]: Sign in to continue to your workspace.
+      - generic [ref=e551]:
+        - button "Google" [ref=e552] [cursor=pointer]:
+          - img
+          - text: Google
+        - button "GitHub" [ref=e553] [cursor=pointer]:
+          - img
+          - text: GitHub
+      - generic [ref=e554]: or continue with email
+      - generic [ref=e557]:
+        - generic [ref=e558]:
+          - text: Email
+          - textbox "Email" [ref=e559]:
+            - /placeholder: you@company.com
+        - generic [ref=e560]:
+          - text: Password
+          - textbox "Password" [ref=e561]:
+            - /placeholder: ••••••••
+        - button "Sign in" [ref=e562] [cursor=pointer]
+      - generic [ref=e563]:
+        - text: Don't have an account?
+        - link "Sign up" [ref=e564] [cursor=pointer]:
+          - /url: /signup
+      - generic [ref=e565]: By signing in you agree to our Terms and Privacy Policy.
+      - link "← Back to site" [ref=e566] [cursor=pointer]:
+        - /url: /

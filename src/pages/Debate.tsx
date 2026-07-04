@@ -136,7 +136,7 @@ export default function Debate() {
             size="lg"
             onClick={handleStartDebate}
             disabled={!selectedId || !topic.trim() || debateMutation.isPending}
-            className="bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow px-6"
+            className="text-white" style={{ background: "hsl(16 76% 52%)" }}
           >
             {debateMutation.isPending ? (
               <>

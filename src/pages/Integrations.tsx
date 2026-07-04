@@ -13,7 +13,6 @@ import {
   Github,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -76,10 +75,13 @@ function GithubImportCard() {
           placeholder="https://github.com/owner/repo"
           className="font-mono text-xs"
         />
-        <Button
+        <button
           type="submit"
           disabled={!repoUrl.trim() || importMutation.isPending}
-          className="bg-gradient-primary text-primary-foreground hover:opacity-90 shrink-0"
+          className="inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold text-white transition-all shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ background: "hsl(16 76% 52%)" }}
+          onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 4px 14px hsl(16 76% 52% / 0.35)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
         >
           {importMutation.isPending ? (
             <>
@@ -92,7 +94,7 @@ function GithubImportCard() {
               <ArrowRight className="h-4 w-4 ml-1.5" />
             </>
           )}
-        </Button>
+        </button>
       </form>
     </div>
   );
@@ -202,10 +204,13 @@ export default function Integrations() {
             </div>
 
             <div className="flex justify-end">
-              <Button
+              <button
                 onClick={handleTestWebhook}
                 disabled={webhookMutation.isPending}
-                className="bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow"
+                className="inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ background: "hsl(16 76% 52%)" }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 4px 14px hsl(16 76% 52% / 0.35)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
               >
                 {webhookMutation.isPending ? (
                   <>
@@ -218,7 +223,7 @@ export default function Integrations() {
                     <ArrowRight className="h-4 w-4 ml-1.5" />
                   </>
                 )}
-              </Button>
+              </button>
             </div>
           </div>
 

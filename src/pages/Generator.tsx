@@ -86,8 +86,11 @@ export default function Generator() {
       >
         <div className="rounded-2xl border border-border bg-card/60 backdrop-blur-sm p-6 shadow-lg">
           <div className="flex items-center gap-2 mb-4">
-            <div className="h-9 w-9 rounded-lg bg-gradient-primary grid place-items-center shadow-glow">
-              <Sparkles className="h-5 w-5 text-primary-foreground" />
+            <div
+              className="h-9 w-9 rounded-lg grid place-items-center"
+              style={{ background: "hsl(222 62% 11%)" }}
+            >
+              <Sparkles className="h-5 w-5 text-white" />
             </div>
             <div>
               <h3 className="font-display font-semibold">Describe your system</h3>
@@ -172,7 +175,7 @@ export default function Generator() {
           size="lg"
           disabled={prompt.trim().length < 10 || generateMutation.isPending}
           onClick={() => generateMutation.mutate()}
-          className="bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow px-8"
+          className="text-white" style={{ background: "hsl(16 76% 52%)" }}
         >
           {generateMutation.isPending ? (
             <>

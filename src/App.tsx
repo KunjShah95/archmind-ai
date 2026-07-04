@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from "react";
+import React, { Suspense, lazy, useState, useEffect } from "react";
 import type { ErrorInfo } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
@@ -11,6 +11,8 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Landing from "./pages/Landing";
 import Pricing from "./pages/Pricing";
 import Contact from "./pages/Contact";
+import About from "./pages/About";
+import Careers from "./pages/Careers";
 import Privacy from "./pages/legal/Privacy";
 import Terms from "./pages/legal/Terms";
 import Security from "./pages/legal/Security";
@@ -112,14 +114,30 @@ const queryClient = new QueryClient({
   },
 });
 
+// ─── Themed Toaster ───────────────────────────────────────────────────────────
+
+function ThemedToaster() {
+  const [theme, setTheme] = useState<"light" | "dark">(
+    () => (document.documentElement.classList.contains("dark") ? "dark" : "light")
+  );
+  useEffect(() => {
+    const obs = new MutationObserver(() =>
+      setTheme(document.documentElement.classList.contains("dark") ? "dark" : "light")
+    );
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => obs.disconnect();
+  }, []);
+  return <Toaster richColors theme={theme} position="top-right" />;
+}
+
 // ─── App ──────────────────────────────────────────────────────────────────────
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
-        <Toaster richColors theme="dark" position="top-right" />
-        <BrowserRouter>
+        <ThemedToaster />
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <RouteErrorBoundary>
             <Suspense fallback={PageLoader}>
               <Routes>
@@ -130,6 +148,8 @@ const App = () => (
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/security" element={<Security />} />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/careers" element={<Careers />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
 

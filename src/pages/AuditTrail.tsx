@@ -32,7 +32,10 @@ function EventRow({ event }: { event: AuditEvent }) {
       <td className="py-3 px-4">
         <div className="flex items-center gap-2">
           <Avatar className="h-6 w-6 shrink-0">
-            <AvatarFallback className={cn("text-[9px]", isAI ? "bg-primary/20 text-primary" : "bg-gradient-primary text-primary-foreground")}>
+            <AvatarFallback
+              className={cn("text-[9px] font-bold", isAI ? "bg-primary/20 text-primary" : "text-white")}
+              style={isAI ? undefined : { background: "hsl(16 76% 52%)" }}
+            >
               {event.actor.slice(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>

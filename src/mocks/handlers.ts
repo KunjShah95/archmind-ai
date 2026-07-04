@@ -1,5 +1,4 @@
 import { http, HttpResponse } from 'msw';
-import { setupWorker } from 'msw/browser';
 import { createMockAnalysis, createMockFinding } from './mockData';
 
 // Mock API endpoints
@@ -42,5 +41,5 @@ export const handlers = [
   }),
 ];
 
-// Export for browser use
-export const worker = setupWorker(...handlers);
+// Note: worker is intentionally not exported here as we use setupServer in tests
+// Create a separate file for browser worker setup if needed

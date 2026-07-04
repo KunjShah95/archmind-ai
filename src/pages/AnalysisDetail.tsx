@@ -297,9 +297,15 @@ export default function AnalysisDetail() {
           <Button asChild variant="ghost" size="sm">
             <Link to={`/analyses/${analysis.id}/audit`}><ShieldCheck className="h-3.5 w-3.5 mr-1.5" /> Audit</Link>
           </Button>
-          <Button size="sm" className="bg-gradient-primary text-primary-foreground hover:opacity-90" onClick={() => refetch()}>
-            <Sparkles className="h-3.5 w-3.5 mr-1.5" /> Refresh
-          </Button>
+          <button
+            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold text-white transition-all"
+            style={{ background: "hsl(16 76% 52%)", transition: "transform 0.15s ease" }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
+            onClick={() => refetch()}
+          >
+            <Sparkles className="h-3.5 w-3.5" /> Refresh
+          </button>
         </div>
       </div>
 
@@ -324,7 +330,7 @@ export default function AnalysisDetail() {
               to={`/analyses/${analysis.id}/agents/${a2.key}`}
               className={cn(
                 "rounded-xl border bg-card p-3 text-left transition-all hover:-translate-y-0.5 block",
-                activeAgent === a2.key ? "border-primary shadow-glow" : "border-border"
+                activeAgent === a2.key ? "border-primary" : "border-border"
               )}
             >
               <div className="flex items-center justify-between">
@@ -585,9 +591,17 @@ function ChatPanel({ analysisId, enabled }: { analysisId: string; enabled: boole
           placeholder={enabled ? "Ask about scalability, security, costs…" : "Available when analysis is ready"}
           disabled={!enabled || sendMutation.isPending}
         />
-        <Button size="icon" onClick={send} disabled={!enabled || sendMutation.isPending} className="bg-gradient-primary text-primary-foreground">
+        <button
+          type="button"
+          onClick={send}
+          disabled={!enabled || sendMutation.isPending}
+          className="h-9 w-9 shrink-0 rounded-md grid place-items-center text-white disabled:opacity-50 transition-all"
+          style={{ background: "hsl(16 76% 52%)" }}
+          onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
+        >
           <Send className="h-4 w-4" />
-        </Button>
+        </button>
       </div>
     </>
   );

@@ -97,7 +97,7 @@ export default function FinOps() {
           size="lg"
           onClick={handleRunFinOps}
           disabled={!selectedId || finopsMutation.isPending}
-          className="bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow shrink-0 h-10"
+          className="text-white" style={{ background: "hsl(16 76% 52%)" }}
         >
           {finopsMutation.isPending ? (
             <>

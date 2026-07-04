@@ -112,15 +112,17 @@ export default function ReportBuilder() {
               <Button variant="outline" size="sm" onClick={() => setPreview(!preview)}>
                 <Eye className="h-3.5 w-3.5 mr-1.5" /> {preview ? "Edit" : "Preview"}
               </Button>
-              <Button
-                size="sm"
-                className="bg-gradient-primary text-primary-foreground hover:opacity-90"
+              <button
+                className="inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ background: "hsl(16 76% 52%)" }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 4px 14px hsl(16 76% 52% / 0.35)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
                 onClick={handleExport}
                 disabled={exporting || selectedSections.size === 0}
               >
                 {exporting ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <FileDown className="h-3.5 w-3.5 mr-1.5" />}
                 Export PDF
-              </Button>
+              </button>
             </div>
           }
         />

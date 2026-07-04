@@ -45,16 +45,20 @@ export default function Contact() {
             href={c.href}
             target="_blank"
             rel="noreferrer"
-            className="group rounded-xl border border-border bg-card p-5 hover:border-primary/40 hover:shadow-elevated transition-all"
+            className="group rounded-lg bg-card p-5 transition-all hover-lift"
+            style={{ border: "1px solid hsl(var(--border))", boxShadow: "var(--shadow-card)" }}
           >
             <div className="flex items-start gap-4">
-              <div className="h-10 w-10 shrink-0 rounded-lg bg-gradient-primary grid place-items-center">
-                <c.icon className="h-5 w-5 text-primary-foreground" />
+              <div
+                className="h-10 w-10 shrink-0 rounded-lg grid place-items-center"
+                style={{ background: "hsl(222 62% 11%)" }}
+              >
+                <c.icon className="h-5 w-5 text-white" />
               </div>
               <div className="min-w-0">
-                <div className="font-display font-semibold">{c.title}</div>
+                <div className="font-semibold">{c.title}</div>
                 <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{c.desc}</p>
-                <div className="mt-2 text-sm text-primary group-hover:underline">{c.cta} →</div>
+                <div className="mt-2 text-sm font-medium" style={{ color: "hsl(16 76% 52%)" }}>{c.cta} →</div>
               </div>
             </div>
           </a>

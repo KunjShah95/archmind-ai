@@ -1,0 +1,419 @@
+- generic [ref=f4e2]:
+  - region "Notifications alt+T"
+  - generic [ref=f4e3]:
+    - banner [ref=f4e4]:
+      - generic [ref=f4e5]:
+        - link "ArchMind AI" [ref=f4e6] [cursor=pointer]:
+          - /url: /
+          - img [ref=f4e8]
+          - generic [ref=f4e12]: ArchMind AI
+        - navigation [ref=f4e13]:
+          - link "Agents" [ref=f4e14] [cursor=pointer]:
+            - /url: "#agents"
+          - link "How it works" [ref=f4e15] [cursor=pointer]:
+            - /url: "#workflow"
+          - link "Features" [ref=f4e16] [cursor=pointer]:
+            - /url: "#features"
+          - link "Pricing" [ref=f4e17] [cursor=pointer]:
+            - /url: /pricing
+        - generic [ref=f4e18]:
+          - link "Sign in" [ref=f4e19] [cursor=pointer]:
+            - /url: /login
+          - link "Get started" [ref=f4e20] [cursor=pointer]:
+            - /url: /signup
+            - button "Get started" [ref=f4e21]:
+              - text: Get started
+              - img [ref=f4e22]
+    - generic [ref=f4e26]:
+      - generic [ref=f4e27]:
+        - generic [ref=f4e28]: Seven specialized AI agents · Live
+        - heading "The AI staff architect your team never had." [level=1] [ref=f4e30]:
+          - text: The AI staff architect
+          - text: your team never had.
+        - paragraph [ref=f4e31]: Upload any architecture diagram. Get expert analysis across scalability, security, reliability, cost, and more — in under 3 minutes.
+        - generic [ref=f4e32]:
+          - link "Start building free" [ref=f4e33] [cursor=pointer]:
+            - /url: /signup
+            - button "Start building free" [ref=f4e34]:
+              - text: Start building free
+              - img [ref=f4e35]
+          - link "Generate architecture" [ref=f4e37] [cursor=pointer]:
+            - /url: /generate
+            - button "Generate architecture" [ref=f4e38]
+        - generic [ref=f4e39]:
+          - generic [ref=f4e40]:
+            - img [ref=f4e41]
+            - text: No credit card
+          - generic [ref=f4e43]:
+            - img [ref=f4e44]
+            - text: SOC 2 ready
+          - generic [ref=f4e46]:
+            - img [ref=f4e47]
+            - text: Self-host available
+      - generic [ref=f4e50]:
+        - generic [ref=f4e55]: archmind.ai/analyses/checkout-v3
+        - generic [ref=f4e56]:
+          - generic [ref=f4e57]:
+            - generic [ref=f4e58]: Overall Score
+            - generic [ref=f4e59]: 00/100
+          - generic [ref=f4e60]:
+            - generic [ref=f4e61]: Agents
+            - generic [ref=f4e62]: 0/7
+        - generic [ref=f4e63]:
+          - generic [ref=f4e64]:
+            - img [ref=f4e66]
+            - generic [ref=f4e70]: Scalability
+            - generic [ref=f4e71]: running…
+          - generic [ref=f4e72]:
+            - img [ref=f4e74]
+            - generic [ref=f4e78]: Security
+            - generic [ref=f4e79]: queued
+          - generic [ref=f4e80]:
+            - img [ref=f4e82]
+            - generic [ref=f4e86]: Reliability
+            - generic [ref=f4e87]: queued
+          - generic [ref=f4e88]:
+            - img [ref=f4e90]
+            - generic [ref=f4e94]: Performance
+            - generic [ref=f4e95]: queued
+          - generic [ref=f4e96]:
+            - img [ref=f4e98]
+            - generic [ref=f4e101]: Cost
+            - generic [ref=f4e102]: queued
+          - generic [ref=f4e103]:
+            - img [ref=f4e105]
+            - generic [ref=f4e108]: Maintainability
+            - generic [ref=f4e109]: queued
+          - generic [ref=f4e110]:
+            - img [ref=f4e112]
+            - generic [ref=f4e115]: Observability
+            - generic [ref=f4e116]: queued
+        - generic [ref=f4e118]:
+          - generic [ref=f4e119]: Architecture Diagram
+          - img [ref=f4e120]:
+            - generic [ref=f4e125]: Client
+            - generic [ref=f4e128]: CDN
+            - generic [ref=f4e131]: API GW
+            - generic [ref=f4e134]: Auth
+            - generic [ref=f4e137]: Orders
+            - generic [ref=f4e140]: Workers
+            - generic [ref=f4e143]: Postgres
+            - generic [ref=f4e146]: Redis
+    - generic [ref=f4e149]:
+      - generic [ref=f4e150]: Trusted at engineering teams inside
+      - generic [ref=f4e151]: Linear
+      - generic [ref=f4e152]: Vercel
+      - generic [ref=f4e153]: Stripe
+      - generic [ref=f4e154]: Notion
+      - generic [ref=f4e155]: Datadog
+      - generic [ref=f4e156]: Snowflake
+      - generic [ref=f4e157]: Figma
+    - generic [ref=f4e160]:
+      - generic [ref=f4e161]:
+        - generic [ref=f4e162]: The intelligence layer
+        - generic [ref=f4e163]:
+          - heading "Seven agents. One verdict." [level=2] [ref=f4e164]
+          - paragraph [ref=f4e165]: Each agent is a domain expert. They run in parallel, debate findings, and synthesize a single actionable report.
+      - generic [ref=f4e166]:
+        - generic [ref=f4e167]:
+          - generic: "01"
+          - img [ref=f4e169]
+          - generic [ref=f4e172]: Scalability
+          - paragraph [ref=f4e173]: Evaluates horizontal scaling, bottlenecks, and capacity headroom.
+          - generic [ref=f4e177]: "82"
+        - generic [ref=f4e178]:
+          - generic: "02"
+          - img [ref=f4e180]
+          - generic [ref=f4e183]: Security
+          - paragraph [ref=f4e184]: Audits authn/z, network exposure, secrets, and threat surface.
+          - generic [ref=f4e188]: "74"
+        - generic [ref=f4e189]:
+          - generic: "03"
+          - img [ref=f4e191]
+          - generic [ref=f4e194]: Reliability
+          - paragraph [ref=f4e195]: Checks failure modes, redundancy, SLOs, and recovery strategy.
+          - generic [ref=f4e199]: "91"
+        - generic [ref=f4e200]:
+          - generic: "04"
+          - img [ref=f4e202]
+          - generic [ref=f4e205]: Performance
+          - paragraph [ref=f4e206]: Analyzes latency, caching, query patterns, and hot paths.
+          - generic [ref=f4e210]: "67"
+        - generic [ref=f4e211]:
+          - generic: "05"
+          - img [ref=f4e213]
+          - generic [ref=f4e215]: Cost
+          - paragraph [ref=f4e216]: Estimates infra spend, idle waste, and right-sizing opportunities.
+          - generic [ref=f4e220]: "88"
+        - generic [ref=f4e221]:
+          - generic: "06"
+          - img [ref=f4e223]
+          - generic [ref=f4e225]: Maintainability
+          - paragraph [ref=f4e226]: Reviews modularity, coupling, ownership, and developer ergonomics.
+          - generic [ref=f4e230]: "79"
+        - generic [ref=f4e231]:
+          - generic: "07"
+          - img [ref=f4e233]
+          - generic [ref=f4e235]: Observability
+          - paragraph [ref=f4e236]: Inspects logs, metrics, traces, and alerting coverage.
+          - generic [ref=f4e240]: "85"
+        - generic [ref=f4e241]:
+          - generic [ref=f4e242]:
+            - generic [ref=f4e243]: Ready to review?
+            - paragraph [ref=f4e244]: Upload your first diagram. No credit card needed.
+          - link "Start free" [ref=f4e245] [cursor=pointer]:
+            - /url: /signup
+            - button "Start free" [ref=f4e246]:
+              - text: Start free
+              - img [ref=f4e247]
+    - generic [ref=f4e250]:
+      - generic [ref=f4e251]:
+        - generic [ref=f4e252]: How it works
+        - heading "From diagram to insight. Three steps." [level=2] [ref=f4e253]:
+          - text: From diagram to insight.
+          - text: Three steps.
+      - generic [ref=f4e254]:
+        - generic [ref=f4e255]:
+          - generic [ref=f4e256]: "01"
+          - img [ref=f4e258]
+          - generic [ref=f4e263]: Upload
+          - paragraph [ref=f4e264]: Drop a diagram, paste a Mermaid snippet, or generate one from a text prompt.
+        - generic [ref=f4e265]:
+          - generic [ref=f4e266]: "02"
+          - img [ref=f4e268]
+          - generic [ref=f4e270]: Analyze
+          - paragraph [ref=f4e271]: Seven AI agents review your architecture in parallel against industry benchmarks.
+        - generic [ref=f4e272]:
+          - generic [ref=f4e273]: "03"
+          - img [ref=f4e275]
+          - generic [ref=f4e277]: Act
+          - paragraph [ref=f4e278]: Download a report, chat with findings, or compare against a previous version.
+      - generic [ref=f4e279]:
+        - generic [ref=f4e280]: Supported formats
+        - generic [ref=f4e281]:
+          - generic [ref=f4e282]: PNG / JPG
+          - generic [ref=f4e283]: PDF
+          - generic [ref=f4e284]: Mermaid
+          - generic [ref=f4e285]: PlantUML
+          - generic [ref=f4e286]: Draw.io
+          - generic [ref=f4e287]: Excalidraw
+          - generic [ref=f4e288]: Lucidchart
+          - generic [ref=f4e289]: Figma export
+          - generic [ref=f4e290]: Terraform
+          - generic [ref=f4e291]: Kubernetes YAML
+          - generic [ref=f4e292]: OpenAPI
+          - generic [ref=f4e293]: SQL Schema
+    - generic [ref=f4e295]:
+      - generic [ref=f4e296]:
+        - generic [ref=f4e297]: Built for production
+        - heading "Everything you need to ship better systems." [level=2] [ref=f4e298]
+      - generic [ref=f4e299]:
+        - generic [ref=f4e300]:
+          - generic [ref=f4e301]:
+            - img [ref=f4e303]
+            - generic [ref=f4e307]: Interactive diagram viewer
+            - paragraph [ref=f4e308]: Pan, zoom, and click any node to surface findings. Severity heat-map highlights where attention is needed most. Filter by agent, severity, or node.
+          - generic [ref=f4e309]:
+            - generic [ref=f4e310]: Mermaid
+            - generic [ref=f4e311]: ReactFlow
+            - generic [ref=f4e312]: Interactive
+        - generic [ref=f4e313]:
+          - img [ref=f4e315]
+          - generic [ref=f4e318]: Score history & trends
+          - paragraph [ref=f4e319]: Track architecture quality over time. Compare across PRs and deployments.
+        - generic [ref=f4e320]:
+          - img [ref=f4e322]
+          - generic [ref=f4e327]: Team workspaces
+          - paragraph [ref=f4e328]: Role-based access for engineers, leads, and execs. Shared analysis links.
+        - generic [ref=f4e329]:
+          - img [ref=f4e331]
+          - generic [ref=f4e341]: Chat with findings
+          - paragraph [ref=f4e342]: Ask follow-ups. Agents have full diagram context to answer precisely.
+        - generic [ref=f4e343]:
+          - img [ref=f4e345]
+          - generic [ref=f4e348]: API & CI/CD webhooks
+          - paragraph [ref=f4e349]: Slack, GitHub, and webhooks for pipeline integration.
+        - generic [ref=f4e350]:
+          - img [ref=f4e352]
+          - generic [ref=f4e354]: Multi-agent debate
+          - paragraph [ref=f4e355]: Watch agents argue trade-offs in real-time before reaching a verdict.
+        - generic [ref=f4e356]:
+          - img [ref=f4e358]
+          - generic [ref=f4e360]: Export anywhere
+          - paragraph [ref=f4e361]: PDF, Markdown, HTML, CSV, or JSON — ready for your RFC or board deck.
+    - generic [ref=f4e364]:
+      - generic [ref=f4e365]:
+        - generic [ref=f4e366]: Social proof
+        - heading "Loved by teams that ship." [level=2] [ref=f4e367]
+      - generic [ref=f4e368]:
+        - generic [ref=f4e369]:
+          - generic [ref=f4e370]:
+            - generic [ref=f4e371]:
+              - img [ref=f4e372]
+              - img [ref=f4e374]
+              - img [ref=f4e376]
+              - img [ref=f4e378]
+              - img [ref=f4e380]
+            - generic [ref=f4e382]: "\""
+            - paragraph [ref=f4e383]: ArchMind caught a caching misconfiguration that would've cost us thousands a month. The scalability agent spotted it in 30 seconds.
+          - generic [ref=f4e384]:
+            - generic [ref=f4e385]: SE
+            - generic [ref=f4e386]:
+              - generic [ref=f4e387]: Staff Engineer
+              - generic [ref=f4e388]: Series-B developer-tools startup
+        - generic [ref=f4e389]:
+          - generic [ref=f4e390]:
+            - generic [ref=f4e391]:
+              - img [ref=f4e392]
+              - img [ref=f4e394]
+              - img [ref=f4e396]
+              - img [ref=f4e398]
+              - img [ref=f4e400]
+            - generic [ref=f4e402]: "\""
+            - paragraph [ref=f4e403]: We run ArchMind on every RFC now. It's like having 7 senior engineers review your diagram before anyone sees a PR.
+          - generic [ref=f4e404]:
+            - generic [ref=f4e405]: PA
+            - generic [ref=f4e406]:
+              - generic [ref=f4e407]: Principal Architect
+              - generic [ref=f4e408]: Cloud infrastructure team
+        - generic [ref=f4e409]:
+          - generic [ref=f4e410]:
+            - generic [ref=f4e411]:
+              - img [ref=f4e412]
+              - img [ref=f4e414]
+              - img [ref=f4e416]
+              - img [ref=f4e418]
+              - img [ref=f4e420]
+            - generic [ref=f4e422]: "\""
+            - paragraph [ref=f4e423]: It runs on local models via Ollama, so we use it without sending any data to third parties. Compliance sign-off was trivial.
+          - generic [ref=f4e424]:
+            - generic [ref=f4e425]: CT
+            - generic [ref=f4e426]:
+              - generic [ref=f4e427]: Platform CTO
+              - generic [ref=f4e428]: Regulated fintech
+    - generic [ref=f4e430]:
+      - generic [ref=f4e431]:
+        - generic [ref=f4e432]: FAQ
+        - heading "Questions? Answered." [level=2] [ref=f4e433]
+      - generic [ref=f4e434]:
+        - generic [ref=f4e435]:
+          - button "How do the agents work?" [ref=f4e436] [cursor=pointer]:
+            - generic [ref=f4e437]: How do the agents work?
+            - img [ref=f4e439]
+          - paragraph [ref=f4e440]: Each agent is a specialized LLM prompt tuned to a specific architectural concern — scalability, security, reliability, performance, cost, maintainability, and observability. They analyze your diagram in parallel, debate findings, and synthesize into actionable recommendations.
+        - generic [ref=f4e441]:
+          - button "Do I need to pay for LLM API costs?" [ref=f4e442] [cursor=pointer]:
+            - generic [ref=f4e443]: Do I need to pay for LLM API costs?
+            - img [ref=f4e445]
+          - paragraph [ref=f4e446]: No. ArchMind supports free and open-source LLM providers. Run locally with Ollama, use Groq's free tier, or bring your own OpenAI-compatible endpoint. No credit card required.
+        - generic [ref=f4e447]:
+          - button "What diagram formats are supported?" [ref=f4e448] [cursor=pointer]:
+            - generic [ref=f4e449]: What diagram formats are supported?
+            - img [ref=f4e451]
+          - paragraph [ref=f4e452]: Mermaid, PlantUML, Draw.io, Excalidraw, Lucidchart, Figma exports, PNG/JPG screenshots, and PDFs. We parse the structure and rebuild an interactive graph you can explore.
+        - generic [ref=f4e453]:
+          - button "Can I self-host ArchMind?" [ref=f4e454] [cursor=pointer]:
+            - generic [ref=f4e455]: Can I self-host ArchMind?
+            - img [ref=f4e457]
+          - paragraph [ref=f4e458]: Yes. The entire stack is open-source friendly. Run the FastAPI backend + React frontend anywhere. Set OLLAMA_BASE_URL for fully offline operation.
+        - generic [ref=f4e459]:
+          - button "How accurate are the agent findings?" [ref=f4e460] [cursor=pointer]:
+            - generic [ref=f4e461]: How accurate are the agent findings?
+            - img [ref=f4e463]
+          - paragraph [ref=f4e464]: Accuracy depends on the LLM provider. Local models provide solid general analysis. Cloud models offer deeper reasoning. All findings include specific, actionable recommendations — not generic advice.
+        - generic [ref=f4e465]:
+          - button "What about team collaboration?" [ref=f4e466] [cursor=pointer]:
+            - generic [ref=f4e467]: What about team collaboration?
+            - img [ref=f4e469]
+          - paragraph [ref=f4e470]: Workspaces, role-based access, compare mode, and shared report links are included. Export findings as PDF, Markdown, or JSON for your RFCs.
+    - generic [ref=f4e474]:
+      - generic [ref=f4e475]:
+        - heading "Your next architecture review takes 3 minutes." [level=2] [ref=f4e476]
+        - paragraph [ref=f4e477]: Stop scheduling design reviews. Get an honest, exhaustive opinion the moment you save the diagram.
+        - link "Get started for free" [ref=f4e478] [cursor=pointer]:
+          - /url: /signup
+          - button "Get started for free" [ref=f4e479]:
+            - text: Get started for free
+            - img [ref=f4e480]
+      - generic [ref=f4e483]:
+        - generic [ref=f4e488]: archmind analysis complete
+        - generic [ref=f4e489]:
+          - generic [ref=f4e490]: $ archmind analyze checkout-v3.mmd
+          - generic [ref=f4e491]: → Parsing diagram… done
+          - generic [ref=f4e492]: → Running 7 agents in parallel…
+          - generic [ref=f4e493]: ✓ Scalability Agent 82/100
+          - generic [ref=f4e494]: ✓ Security Agent 74/100
+          - generic [ref=f4e495]: ✓ Reliability Agent 91/100
+          - generic [ref=f4e496]: ✓ Performance Agent 67/100
+          - generic [ref=f4e497]: ○ Cost Agent
+          - generic [ref=f4e498]: ○ Maintainability Agent
+          - generic [ref=f4e499]: ○ Observability Agent
+          - generic [ref=f4e500]: ──────────────────────────────
+          - generic [ref=f4e501]:
+            - generic [ref=f4e502]: "Overall score:"
+            - generic [ref=f4e503]: 0/100
+          - generic [ref=f4e504]: → 3 critical findings need attention
+          - generic [ref=f4e505]: → Report ready at /analyses/xyz
+    - contentinfo [ref=f4e506]:
+      - generic [ref=f4e507]:
+        - generic [ref=f4e508]:
+          - link "ArchMind AI" [ref=f4e510] [cursor=pointer]:
+            - /url: /
+            - img [ref=f4e512]
+            - generic [ref=f4e516]: ArchMind AI
+          - paragraph [ref=f4e517]: AI-powered architecture intelligence for engineering teams who care about quality.
+          - generic [ref=f4e518]:
+            - link "GitHub" [ref=f4e519] [cursor=pointer]:
+              - /url: https://github.com/KunjShah95/archmind-ai
+              - img [ref=f4e520]
+            - link "Slack" [ref=f4e523] [cursor=pointer]:
+              - /url: https://slack.com
+              - img [ref=f4e524]
+        - generic [ref=f4e533]:
+          - generic [ref=f4e534]: Product
+          - list [ref=f4e535]:
+            - listitem [ref=f4e536]:
+              - link "Features" [ref=f4e537] [cursor=pointer]:
+                - /url: "#features"
+            - listitem [ref=f4e538]:
+              - link "Agents" [ref=f4e539] [cursor=pointer]:
+                - /url: "#agents"
+            - listitem [ref=f4e540]:
+              - link "Pricing" [ref=f4e541] [cursor=pointer]:
+                - /url: /pricing
+            - listitem [ref=f4e542]:
+              - link "Changelog" [ref=f4e543] [cursor=pointer]:
+                - /url: https://github.com/KunjShah95/archmind-ai/releases
+        - generic [ref=f4e544]:
+          - generic [ref=f4e545]: Company
+          - list [ref=f4e546]:
+            - listitem [ref=f4e547]:
+              - link "About" [ref=f4e548] [cursor=pointer]:
+                - /url: /about
+            - listitem [ref=f4e549]:
+              - link "Careers" [ref=f4e550] [cursor=pointer]:
+                - /url: /careers
+            - listitem [ref=f4e551]:
+              - link "Contact" [ref=f4e552] [cursor=pointer]:
+                - /url: /contact
+            - listitem [ref=f4e553]:
+              - link "Blog" [ref=f4e554] [cursor=pointer]:
+                - /url: https://github.com/KunjShah95/archmind-ai
+        - generic [ref=f4e555]:
+          - generic [ref=f4e556]: Legal
+          - list [ref=f4e557]:
+            - listitem [ref=f4e558]:
+              - link "Privacy" [ref=f4e559] [cursor=pointer]:
+                - /url: /privacy
+            - listitem [ref=f4e560]:
+              - link "Terms" [ref=f4e561] [cursor=pointer]:
+                - /url: /terms
+            - listitem [ref=f4e562]:
+              - link "Security" [ref=f4e563] [cursor=pointer]:
+                - /url: /security
+            - listitem [ref=f4e564]:
+              - link "DPA" [ref=f4e565] [cursor=pointer]:
+                - /url: /privacy
+      - generic [ref=f4e567]:
+        - generic [ref=f4e568]: © 2026 ArchMind AI, Inc.
+        - generic [ref=f4e569]: Made for engineers who hate bad diagrams.

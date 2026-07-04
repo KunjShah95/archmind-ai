@@ -126,24 +126,27 @@ export default function LiveCloud() {
               ArchMind AI scans read-only resource metadata using Cloud Credentials API configurations. It parses live setups to compare them with your intended designs.
             </p>
           </div>
-          <Button
-            size="lg"
+          <button
+            type="button"
             onClick={handleScan}
             disabled={!selectedId || scanMutation.isPending}
-            className="w-full mt-4 bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow"
+            className="w-full mt-4 rounded-md py-2.5 text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-50 transition-all"
+            style={{ background: "hsl(16 76% 52%)" }}
+            onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.transform = "translateY(-1px)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
           >
             {scanMutation.isPending ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
                 Auditing Live Cloud Resources...
               </>
             ) : (
               <>
-                <RefreshCw className="h-4 w-4 mr-2" />
+                <RefreshCw className="h-4 w-4" />
                 Scan & Compare Resources
               </>
             )}
-          </Button>
+          </button>
         </div>
       </div>
 

@@ -86,7 +86,7 @@ export default function Benchmarks() {
           size="lg"
           onClick={handleRunBenchmark}
           disabled={!selectedId || benchmarkMutation.isPending}
-          className="bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow shrink-0 h-10"
+          className="text-white" style={{ background: "hsl(16 76% 52%)" }}
         >
           {benchmarkMutation.isPending ? (
             <>

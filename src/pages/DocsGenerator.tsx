@@ -212,13 +212,16 @@ export default function DocsGenerator() {
           </div>
         </div>
 
-        <Button
-          className="bg-gradient-primary text-primary-foreground hover:opacity-90 mt-4"
+        <button
+          className="inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-4"
           disabled={!selectedAnalysisId || !ready}
           onClick={() => setShouldGenerate(true)}
+          style={{ background: "hsl(16 76% 52%)" }}
+          onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 4px 14px hsl(16 76% 52% / 0.35)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
         >
           <FileText className="h-4 w-4 mr-1.5" /> Generate
-        </Button>
+        </button>
       </div>
 
       {analysis && !ready && (

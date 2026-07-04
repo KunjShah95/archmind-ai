@@ -26,9 +26,15 @@ export default function Workspaces() {
         title="Workspaces"
         description="Organize analyses by team and control who can do what."
         actions={
-          <Button className="bg-gradient-primary text-primary-foreground hover:opacity-90" onClick={() => toast.info("Workspace creation coming in Team plan")}>
-            <Plus className="h-4 w-4 mr-1.5" /> New workspace
-          </Button>
+          <button
+            className="inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold text-white transition-all"
+            style={{ background: "hsl(16 76% 52%)" }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 4px 14px hsl(16 76% 52% / 0.35)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+            onClick={() => toast.info("Workspace creation coming in Team plan")}
+          >
+            <Plus className="h-4 w-4" /> New workspace
+          </button>
         }
       />
 
@@ -39,7 +45,10 @@ export default function Workspaces() {
           <div key={w.id} className="rounded-xl border border-border bg-card p-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-lg bg-gradient-primary grid place-items-center font-semibold text-primary-foreground">
+                <div
+                  className="h-9 w-9 rounded-lg grid place-items-center font-semibold text-white"
+                  style={{ background: "hsl(222 62% 11%)" }}
+                >
                   {w.name[0]}
                 </div>
                 <div>
@@ -80,7 +89,7 @@ export default function Workspaces() {
             {members.map((m) => (
               <div key={m.id} className="flex items-center gap-4 p-4">
                 <Avatar className="h-9 w-9">
-                  <AvatarFallback className="bg-gradient-primary text-primary-foreground text-xs">
+                  <AvatarFallback className="text-white text-xs" style={{ background: "hsl(16 76% 52%)" }}>
                     {(m.full_name || m.email).slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
