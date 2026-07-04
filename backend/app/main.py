@@ -77,10 +77,12 @@ async def global_exception_handler(request: Request, exc: Exception):
         return JSONResponse(
             status_code=500,
             content={"detail": "Analysis pipeline failed", "error_code": exc.error_code, "failed_step": exc.failed_step},
+            headers={"Access-Control-Allow-Origin": request.headers.get("origin", ""), "Access-Control-Allow-Credentials": "true"},
         )
     logger.exception("unhandled_exception", path=request.url.path, method=request.method)
     from fastapi.responses import JSONResponse
-    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"},
+                        headers={"Access-Control-Allow-Origin": request.headers.get("origin", ""), "Access-Control-Allow-Credentials": "true"})
 
 
 app.include_router(auth.router)
