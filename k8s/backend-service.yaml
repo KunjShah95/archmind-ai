@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: archmind-backend-svc
+  namespace: archmind
+spec:
+  type: ClusterIP
+  selector:
+    app: archmind-backend
+  ports:
+  - port: 80
+    targetPort: 8000

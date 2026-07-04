@@ -27,6 +27,11 @@ export class ApiError extends Error {
 
 const REQUEST_TIMEOUT_MS = 15_000;
 
+function getCsrfToken(): string | null {
+  const match = document.cookie.match(/(?:^|;\s*)archmind_csrf=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getStoredToken();
   const headers: Record<string, string> = {
@@ -36,12 +41,18 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   if (!(options.body instanceof FormData)) {
     headers["Content-Type"] = headers["Content-Type"] || "application/json";
   }
+  const method = (options.method || "GET").toUpperCase();
+  if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+    const csrf = getCsrfToken();
+    if (csrf) headers["X-CSRF-Token"] = csrf;
+  }
 
   let res: Response;
   try {
     res = await fetch(`${API_BASE}${path}`, {
       ...options,
       headers,
+      credentials: "include",
       cache: "no-store",
       signal: options.signal ?? AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
@@ -231,6 +242,7 @@ export const api = {
     const token = getStoredToken();
     const res = await fetch(`${API_BASE}/api/analyses/${id}/export/${fmt}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
+      credentials: "include",
     });
     if (!res.ok) throw new ApiError("Export failed", res.status);
     const blob = await res.blob();
@@ -425,6 +437,15 @@ export const api = {
       method: "POST",
       body: JSON.stringify(body),
     }),
+
+  exchangeSession: (token: string) =>
+    request<{ status: string }>("/api/auth/session", {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    }),
+
+  sessionLogout: () =>
+    request<{ status: string }>("/api/auth/logout", { method: "POST" }),
 };
 
 export { setStoredToken };

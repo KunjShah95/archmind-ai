@@ -1,0 +1,21 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: archmind-backend-pdb
+  namespace: archmind
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: archmind-backend
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: archmind-frontend-pdb
+  namespace: archmind
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: archmind-frontend

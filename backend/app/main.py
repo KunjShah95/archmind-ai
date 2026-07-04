@@ -18,7 +18,7 @@ from app.database import init_db
 from app.errors import PipelineError
 from app.limiter import limiter
 from app.observability import configure_logging, get_logger, set_correlation_id
-from app.routers import analyses, auth, integrations, meta, workspaces
+from app.routers import analyses, auth, gdpr, integrations, meta, session, workspaces
 
 settings = get_settings()
 
@@ -60,11 +60,22 @@ async def security_headers(request: Request, call_next):
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    # Add HSTS header for non-localhost deployments
+    if request.url.hostname not in ("localhost", "127.0.0.1"):
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     # API responses carry per-user data; keep them out of browser/proxy caches.
     if request.url.path.startswith("/api"):
         response.headers["Cache-Control"] = "no-store"
         response.headers["Pragma"] = "no-cache"
     return response
+
+
+def _cors_headers(request: Request) -> dict[str, str]:
+    """Return CORS headers only for allowlisted origins (prevents origin reflection)."""
+    origin = request.headers.get("origin", "")
+    if origin in settings.cors_origin_list:
+        return {"Access-Control-Allow-Origin": origin, "Access-Control-Allow-Credentials": "true"}
+    return {}
 
 
 @app.exception_handler(Exception)
@@ -77,15 +88,17 @@ async def global_exception_handler(request: Request, exc: Exception):
         return JSONResponse(
             status_code=500,
             content={"detail": "Analysis pipeline failed", "error_code": exc.error_code, "failed_step": exc.failed_step},
-            headers={"Access-Control-Allow-Origin": request.headers.get("origin", ""), "Access-Control-Allow-Credentials": "true"},
+            headers=_cors_headers(request),
         )
     logger.exception("unhandled_exception", path=request.url.path, method=request.method)
     from fastapi.responses import JSONResponse
     return JSONResponse(status_code=500, content={"detail": "Internal server error"},
-                        headers={"Access-Control-Allow-Origin": request.headers.get("origin", ""), "Access-Control-Allow-Credentials": "true"})
+                        headers=_cors_headers(request))
 
 
 app.include_router(auth.router)
+app.include_router(session.router)
+app.include_router(gdpr.router)
 app.include_router(workspaces.router)
 app.include_router(analyses.router)
 app.include_router(integrations.router)

@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: archmind-backend
+  namespace: archmind
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: archmind-backend
+  template:
+    metadata:
+      labels:
+        app: archmind-backend
+    spec:
+      containers:
+      - name: archmind-backend
+        image: archmind/backend:latest
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: archmind-config
+        - secretRef:
+            name: archmind-secrets
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+        volumeMounts:
+        - name: uploads-storage
+          mountPath: /app/uploads
+      volumes:
+      - name: uploads-storage
+        emptyDir: {}

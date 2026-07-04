@@ -21,7 +21,10 @@ export const AuthContext = createContext<AuthState | null>(null);
 
 async function syncTokenAndProfile(token: string): Promise<Profile> {
   setStoredToken(token);
-  return api.me();
+  const profile = await api.me();
+  // Exchange for httpOnly cookie (best-effort — don't fail login if this fails)
+  api.exchangeSession(token).catch(() => {});
+  return profile;
 }
 
 async function withTimeout<T>(promise: Promise<T>, ms = 12000): Promise<T> {
@@ -57,6 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
+    let unsubscribeFn: (() => void) | undefined;
     (async () => {
       if (isSupabaseConfigured && supabase) {
         const isOAuthRedirect = window.location.hash.includes("access_token") ||
@@ -80,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // SIGNED_IN fires after PKCE exchange completes → now safe to unlock UI
           if (!cancelled) setLoading(false);
         });
+        unsubscribeFn = () => sub.subscription.unsubscribe();
 
         // 1. Check for existing session
         const { data } = await supabase.auth.getSession();
@@ -100,15 +105,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!isOAuthRedirect) {
           if (!cancelled) setLoading(false);
         }
-
-        return () => { sub.subscription.unsubscribe(); };
-      }
-      if (!cancelled) {
+      } else if (!cancelled) {
         await refreshProfile();
         setLoading(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => { cancelled = true; unsubscribeFn?.(); };
   }, [refreshProfile]);
 
   const signInWithEmail = useCallback(async (email: string, password: string) => {
@@ -173,6 +175,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (isSupabaseConfigured && supabase) {
       await supabase.auth.signOut();
     }
+    api.sessionLogout().catch(() => {});
     setStoredToken(null);
     setUser(null);
   }, []);

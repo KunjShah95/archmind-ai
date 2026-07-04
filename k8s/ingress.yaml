@@ -1,0 +1,33 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: archmind-ingress
+  namespace: archmind
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/server-snippet: "location /metrics { return 404; }"
+spec:
+  tls:
+  - hosts:
+    - archmind.example.com
+    secretName: archmind-tls
+  rules:
+  - host: archmind.example.com
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: archmind-backend-svc
+            port:
+              number: 80
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: archmind-frontend-svc
+            port:
+              number: 80

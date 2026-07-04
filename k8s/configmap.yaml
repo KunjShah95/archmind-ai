@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: archmind-config
+  namespace: archmind
+data:
+  LOG_LEVEL: "INFO"
+  CORS_ORIGINS: "https://archmind.vercel.app"
+  UPLOADS_DIR: "/app/uploads"

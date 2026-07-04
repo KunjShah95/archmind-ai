@@ -1,10 +1,11 @@
+import hashlib
 import json
 import re
 import urllib.request
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Cookie, Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
@@ -149,21 +150,39 @@ def ensure_default_workspace(db: Session, profile: Profile) -> Workspace:
 
 
 def get_current_user(
+    request: Request,
     creds: Annotated[HTTPAuthorizationCredentials | None, Depends(security)],
-    db: Annotated[Session, Depends(get_db)],
+    archmind_token: Annotated[str | None, Cookie()] = None,
+    db: Session = Depends(get_db),
 ) -> Profile:
-    if not creds:
+    # Try Bearer header first (backward-compatible path).
+    token = creds.credentials if creds else None
+
+    # Fall back to httpOnly cookie, enforcing CSRF on mutating methods.
+    if not token and archmind_token:
+        if request.method in ("POST", "PUT", "PATCH", "DELETE"):
+            expected_csrf = hashlib.sha256((archmind_token + ":csrf").encode()).hexdigest()
+            provided_csrf = request.headers.get("X-CSRF-Token", "")
+            if provided_csrf != expected_csrf:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="CSRF token mismatch",
+                )
+        token = archmind_token
+
+    if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
-    payload = decode_token(creds.credentials)
+
+    payload = decode_token(token)
     user_id = payload.get("sub")
     email = payload.get("email")
     if not user_id or not email:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
-        
+
     # Extract metadata details from Supabase JWT token
     user_meta = payload.get("user_metadata", {})
     full_name = user_meta.get("full_name") or user_meta.get("name") or payload.get("name")
-    
+
     profile = get_or_create_profile(db, user_id, email, full_name)
     ensure_default_workspace(db, profile)
     return profile

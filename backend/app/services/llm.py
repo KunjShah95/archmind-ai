@@ -8,6 +8,7 @@ Provider priority is controlled by LLM_PROVIDER_ORDER (comma-separated names);
 the first configured provider that returns a response wins, others are fallbacks.
 """
 
+import hashlib
 import json
 import logging
 import os
@@ -16,7 +17,45 @@ import urllib.error
 from dataclasses import dataclass
 from typing import Callable
 
+# ---------------------------------------------------------------------------
+# Optional Redis cache — only activated when REDIS_URL env var is set and the
+# redis library is installed.  Import failures are silenced; the service
+# degrades gracefully to uncached mode.
+# ---------------------------------------------------------------------------
+try:
+    import redis as _redis_module  # type: ignore[import]
+    _REDIS_AVAILABLE = True
+except ImportError:
+    _redis_module = None  # type: ignore[assignment]
+    _REDIS_AVAILABLE = False
+
+# Lazily initialised on first use; kept at module level so the connection is
+# reused across calls without re-connecting every request.
+_redis_client = None
+
 _logger = logging.getLogger(__name__)
+
+
+def _get_redis():
+    """Return a live Redis client, or None if unavailable / not configured.
+
+    Initialised lazily on first call so import-time side-effects are avoided.
+    """
+    global _redis_client
+    if not _REDIS_AVAILABLE:
+        return None
+    redis_url = os.environ.get("REDIS_URL")
+    if not redis_url:
+        return None
+    if _redis_client is None:
+        _redis_client = _redis_module.from_url(redis_url, decode_responses=True)
+    return _redis_client
+
+
+def _cache_key(provider_name: str, model: str, system: str, prompt: str) -> str:
+    """Return SHA-256 hex digest of the four-part cache identity."""
+    raw = f"{provider_name}:{model}:{system}:{prompt}"
+    return hashlib.sha256(raw.encode()).hexdigest()
 
 
 # Groq (and some others) sit behind Cloudflare, which blocks urllib's default
@@ -382,16 +421,42 @@ def llm_complete(system: str, prompt: str) -> str | None:
     Walks providers in priority order. Any failure (rate limit, timeout, error)
     yields None from the caller and falls through to the next provider, so a key
     hitting its limit hands off to the next configured provider automatically.
+
+    Responses are cached in Redis (TTL 24 h) when REDIS_URL is set and the
+    redis library is installed.  Cache errors are logged at WARNING level and
+    the call proceeds without caching — no exceptions are surfaced to callers.
     """
     providers = _init_providers()
     if not providers:
         return None
+
+    # Build the cache key from the first provider in priority order (stable
+    # representative for this configuration + prompt pair).
+    first = providers[0]
+    key = _cache_key(first.name, first.model or "", system, prompt)
+
+    rc = _get_redis()
+    if rc is not None:
+        try:
+            cached = rc.get(key)
+            if cached is not None:
+                _logger.debug("llm_cache_hit", extra={"key_prefix": key[:16]})
+                return cached
+        except Exception as exc:
+            _logger.warning("llm_cache_error", extra={"error": str(exc)})
+            rc = None  # disable cache for the remainder of this call
+
     for p in providers:
         fn = DISPATCH.get(p.name)
         if fn is None:
             continue
         result = fn(p, prompt, system)
         if result is not None:
+            if rc is not None:
+                try:
+                    rc.set(key, result, ex=86400)
+                except Exception as exc:
+                    _logger.warning("llm_cache_error", extra={"error": str(exc)})
             return result
     return None
 
