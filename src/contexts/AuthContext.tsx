@@ -19,12 +19,27 @@ type AuthState = {
 
 export const AuthContext = createContext<AuthState | null>(null);
 
-async function syncTokenAndProfile(token: string): Promise<Profile> {
+async function syncTokenAndProfile(token: string, supabaseUser?: { id: string; email?: string; user_metadata?: Record<string, unknown> }): Promise<Profile> {
   setStoredToken(token);
-  const profile = await api.me();
-  // Exchange for httpOnly cookie (best-effort — don't fail login if this fails)
-  api.exchangeSession(token).catch(() => {});
-  return profile;
+  try {
+    const profile = await api.me();
+    // Exchange for httpOnly cookie (best-effort — don't fail login if this fails)
+    api.exchangeSession(token).catch(() => {});
+    return profile;
+  } catch (err) {
+    // Backend unreachable — fall back to Supabase user data so auth still works
+    if (supabaseUser) {
+      return {
+        id: supabaseUser.id,
+        email: supabaseUser.email ?? "",
+        full_name: (supabaseUser.user_metadata?.full_name as string | null) ?? null,
+        plan: "free",
+        analyses_used: 0,
+        analyses_limit: 10,
+      };
+    }
+    throw err;
+  }
 }
 
 async function withTimeout<T>(promise: Promise<T>, ms = 12000): Promise<T> {
@@ -71,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: sub } = supabase.auth.onAuthStateChange(async (_event, session) => {
           if (session?.access_token) {
             try {
-              const profile = await syncTokenAndProfile(session.access_token);
+              const profile = await syncTokenAndProfile(session.access_token, session.user);
               if (!cancelled) setUser(profile);
             } catch {
               // Don't delete the token on API failure — show a toast instead (Issue #4)
@@ -90,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data } = await supabase.auth.getSession();
         if (data.session?.access_token) {
           try {
-            const profile = await syncTokenAndProfile(data.session.access_token);
+            const profile = await syncTokenAndProfile(data.session.access_token, data.session.user);
             if (!cancelled) setUser(profile);
           } catch {
             // Don't delete the token on API failure — show a toast instead (Issue #4)
@@ -118,7 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data, error } = await withTimeout(supabase.auth.signInWithPassword({ email, password }));
       if (error) throw error;
       if (data.session) {
-        const profile = await syncTokenAndProfile(data.session.access_token);
+        const profile = await syncTokenAndProfile(data.session.access_token, data.user ?? undefined);
         setUser(profile);
       }
       return;
@@ -142,7 +157,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }));
       if (error) throw error;
       if (data.session) {
-        const profile = await syncTokenAndProfile(data.session.access_token);
+        const profile = await syncTokenAndProfile(data.session.access_token, data.user ?? undefined);
         setUser(profile);
         return { needsConfirmation: false };
       }
