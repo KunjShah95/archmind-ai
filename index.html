@@ -6,6 +6,8 @@
     <title>ArchMind AI – Architecture Intelligence Platform</title>
     <meta name="description" content="AI-powered reviews for your software architecture. Upload diagrams, get expert analysis on scalability, security, reliability, performance, cost, and more." />
     <meta name="author" content="ArchMind AI" />
+    <meta name="keywords" content="AI architecture review, software architecture analysis, architecture diagram tool, scalability review, security architecture, system design AI, architecture intelligence platform" />
+    <link rel="canonical" href="https://archmind.ai/" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -23,6 +25,83 @@
     <meta name="twitter:title" content="ArchMind AI – The AI Staff Architect for your team" />
     <meta name="twitter:description" content="Design, review, optimize, and simulate production architectures with AI. Generate from a prompt, review any diagram." />
     <meta name="twitter:image" content="/og-image.png" />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "ArchMind AI",
+      "url": "https://archmind.ai",
+      "logo": "https://archmind.ai/favicon.svg",
+      "description": "AI-powered software architecture intelligence platform with specialized review agents for scalability, security, reliability, performance, cost, and observability.",
+      "sameAs": [
+        "https://github.com/KunjShah95/archmind-ai"
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "ArchMind AI",
+      "url": "https://archmind.ai",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Web",
+      "description": "Upload or generate software architecture diagrams and get expert AI analysis from 7 specialized agents covering scalability, security, reliability, performance, cost, maintainability, and observability.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How do the ArchMind AI agents work?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Each agent is a specialized LLM prompt tuned to a specific architectural concern — scalability, security, reliability, performance, cost, maintainability, and observability. They analyze your diagram in parallel, debate findings, and synthesize into actionable recommendations."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do I need to pay for LLM API costs?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. ArchMind supports free and open-source LLM providers. Run locally with Ollama, use Groq's free tier, or bring your own OpenAI-compatible endpoint. No credit card required."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What diagram formats does ArchMind AI support?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Mermaid, PlantUML, Draw.io, Excalidraw, Lucidchart, Figma exports, PNG/JPG screenshots, and PDFs. We parse the structure and rebuild an interactive graph you can explore."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I self-host ArchMind AI?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. The entire stack is open-source friendly. Run the FastAPI backend and React frontend anywhere. Set OLLAMA_BASE_URL for fully offline operation."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does ArchMind AI support team collaboration?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Workspaces, role-based access, compare mode, and shared report links are included. Export findings as PDF, Markdown, or JSON for your RFCs."
+          }
+        }
+      ]
+    }
+    </script>
     <script>
       (function() {
         var stored = localStorage.getItem("theme");

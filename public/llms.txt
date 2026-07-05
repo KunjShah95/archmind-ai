@@ -1,0 +1,22 @@
+# ArchMind AI
+
+> AI-powered architecture intelligence platform. Upload or generate software architecture diagrams and receive expert analysis from 7 specialized AI agents covering scalability, security, reliability, performance, cost, maintainability, and observability.
+
+## Key pages
+
+- [Home](https://archmind.ai/): Product overview, features, and getting started
+- [Pricing](https://archmind.ai/pricing): Plans and pricing tiers
+- [About](https://archmind.ai/about): Team and mission
+- [Careers](https://archmind.ai/careers): Open positions
+- [Contact](https://archmind.ai/contact): Get in touch
+- [Privacy Policy](https://archmind.ai/privacy): Data handling and privacy
+- [Terms of Service](https://archmind.ai/terms): Usage terms
+- [Security](https://archmind.ai/security): Security practices
+
+## What ArchMind does
+
+- Analyzes architecture diagrams (Mermaid, PlantUML, Draw.io, Excalidraw, PNG, PDF)
+- 7 specialized agents: scalability, security, reliability, performance, cost, maintainability, observability
+- Supports local LLMs via Ollama for fully offline/private operation
+- Team workspaces, compare mode, executive reports, PDF/Markdown export
+- Self-hostable open-source stack (FastAPI + React)
