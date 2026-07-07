@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Logo } from "@/components/Logo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { AGENTS } from "@/lib/mock-data";
 
 const ICONS: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
@@ -135,34 +136,25 @@ function SiteHeader() {
           ].map((item) =>
             item.to ? (
               <Link key={item.label} to={item.to}
-                className="font-medium transition-colors"
-                style={{ color: "hsl(220 14% 46%)" }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "hsl(222 62% 11%)"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "hsl(220 14% 46%)"; }}
+                className="font-medium text-muted-foreground hover:text-foreground transition-colors"
               >{item.label}</Link>
             ) : (
               <a key={item.label} href={item.href}
-                className="font-medium transition-colors"
-                style={{ color: "hsl(220 14% 46%)" }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "hsl(222 62% 11%)"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "hsl(220 14% 46%)"; }}
+                className="font-medium text-muted-foreground hover:text-foreground transition-colors"
               >{item.label}</a>
             )
           )}
         </nav>
 
         <div className="ml-auto flex items-center gap-3">
-          <Link to="/login" className="hidden sm:block text-sm font-medium transition-colors"
-            style={{ color: "hsl(220 14% 46%)" }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "hsl(222 62% 11%)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "hsl(220 14% 46%)"; }}
-          >Sign in</Link>
+          <ThemeToggle />
+          <Link to="/login" className="hidden sm:block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Sign in</Link>
           <Link to="/signup">
             <button
-              className="inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold text-white transition-all"
-              style={{ background: "hsl(222 62% 11%)" }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "hsl(222 50% 18%)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "hsl(222 62% 11%)"; e.currentTarget.style.transform = ""; }}
+              className="inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold transition-all"
+              style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))" }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.85"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = ""; e.currentTarget.style.transform = ""; }}
             >
               Get started <ArrowRight className="h-3.5 w-3.5" />
             </button>
@@ -184,7 +176,7 @@ function SiteHeader() {
               <div className="mt-6 flex flex-col gap-2 border-t border-border pt-6">
                 <Link to="/login"><Button variant="outline" className="w-full">Sign in</Button></Link>
                 <Link to="/signup">
-                  <button className="w-full rounded-md py-2 text-sm font-semibold text-white" style={{ background: "hsl(222 62% 11%)" }}>Get started</button>
+                  <button className="w-full rounded-md py-2 text-sm font-semibold" style={{ background: "hsl(var(--foreground))", color: "hsl(var(--background))" }}>Get started</button>
                 </Link>
               </div>
             </SheetContent>

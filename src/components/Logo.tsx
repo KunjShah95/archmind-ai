@@ -13,7 +13,7 @@ export function Logo({ className, withText = true }: { className?: string; withT
         <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
       {withText && (
-        <span className="font-display font-semibold tracking-tight text-[15px]">
+        <span className="font-display font-semibold tracking-tight text-[15px] text-foreground">
           ArchMind<span className="text-primary"> AI</span>
         </span>
       )}
