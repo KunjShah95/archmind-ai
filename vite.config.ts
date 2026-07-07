@@ -26,9 +26,6 @@ export default defineConfig({
           if (id.includes("node_modules/framer-motion")) {
             return "vendor-motion";
           }
-          if (id.includes("node_modules/@radix-ui")) {
-            return "vendor-radix";
-          }
           if (id.includes("node_modules/@tanstack") || id.includes("node_modules/react-query")) {
             return "vendor-tanstack";
           }
@@ -39,7 +36,8 @@ export default defineConfig({
             id.includes("node_modules/react/") ||
             id.includes("node_modules/react-dom") ||
             id.includes("node_modules/react-router") ||
-            id.includes("node_modules/scheduler/")
+            id.includes("node_modules/scheduler/") ||
+            id.includes("node_modules/@radix-ui")
           ) {
             return "vendor-react";
           }
