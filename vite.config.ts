@@ -26,7 +26,7 @@ export default defineConfig({
           if (id.includes("node_modules/framer-motion")) {
             return "vendor-motion";
           }
-          if (id.includes("node_modules/recharts") || id.includes("node_modules/d3-") || id.includes("node_modules/victory-")) {
+          if (id.includes("node_modules/recharts")) {
             return "vendor-charts";
           }
           if (id.includes("node_modules/@radix-ui")) {
