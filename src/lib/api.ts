@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { getStoredToken, setStoredToken } from "./supabase";
 import type {
   AgentKey,
@@ -34,6 +35,17 @@ export class ApiError extends Error {
 // request. 60s tolerates the wake-up so retries aren't needed to reach a warm server.
 const REQUEST_TIMEOUT_MS = 60_000;
 
+// Show a "waking server" toast if a request is still pending after this long,
+// so users understand the Render free-tier cold start instead of assuming a hang.
+const COLD_START_TOAST_MS = 3_000;
+const COLD_START_TOAST_ID = "cold-start";
+
+// Delay before a single retry of an idempotent request that failed at the
+// connection level (timeout/abort or network unreachable) during a cold start.
+const COLD_START_RETRY_DELAY_MS = 1_500;
+
+const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
 function getCsrfToken(): string | null {
   const match = document.cookie.match(/(?:^|;\s*)archmind_csrf=([^;]+)/);
   return match ? decodeURIComponent(match[1]) : null;
@@ -54,21 +66,62 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     if (csrf) headers["X-CSRF-Token"] = csrf;
   }
 
+  // A single fetch attempt. Throws an ApiError on connection-level failures
+  // (timeout/abort -> 408, network unreachable -> 0) so callers can decide
+  // whether the failure is retryable.
+  const attempt = async (): Promise<Response> => {
+    try {
+      return await fetch(`${API_BASE}${path}`, {
+        ...options,
+        headers,
+        credentials: "include",
+        cache: "no-store",
+        signal: options.signal ?? AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
+    } catch (e) {
+      if (e instanceof DOMException && (e.name === "TimeoutError" || e.name === "AbortError")) {
+        throw new ApiError("Server is not responding. Please try again in a moment.", 408);
+      }
+      throw new ApiError("Cannot reach the server. Check your connection and try again.", 0);
+    }
+  };
+
+  // Retry once, but only for idempotent methods and only when the caller did
+  // not supply its own abort signal (respect external abort control). Retrying
+  // POST/PUT/PATCH/DELETE could create duplicate analyses.
+  const isIdempotent = method === "GET" || method === "HEAD";
+  const canRetry = isIdempotent && !options.signal;
+
+  // Show the "waking server" toast if the request is still pending after a few
+  // seconds. Shared toast id so concurrent slow requests collapse into one.
+  const coldStartTimer = setTimeout(() => {
+    toast.loading(
+      "Waking up the server… this can take up to a minute on first load",
+      { id: COLD_START_TOAST_ID },
+    );
+  }, COLD_START_TOAST_MS);
+
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}${path}`, {
-      ...options,
-      headers,
-      credentials: "include",
-      cache: "no-store",
-      signal: options.signal ?? AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-    });
-  } catch (e) {
-    if (e instanceof DOMException && (e.name === "TimeoutError" || e.name === "AbortError")) {
-      throw new ApiError("Server is not responding. Please try again in a moment.", 408);
+    try {
+      res = await attempt();
+    } catch (e) {
+      // Only connection-level failures (408 timeout/abort or 0 network) reach
+      // here as ApiError; HTTP error responses return a Response instead.
+      const isConnectionError =
+        e instanceof ApiError && (e.status === 408 || e.status === 0);
+      if (isConnectionError && canRetry) {
+        await delay(COLD_START_RETRY_DELAY_MS);
+        res = await attempt();
+      } else {
+        throw e;
+      }
     }
-    throw new ApiError("Cannot reach the server. Check your connection and try again.", 0);
+  } finally {
+    clearTimeout(coldStartTimer);
+    toast.dismiss(COLD_START_TOAST_ID);
   }
+
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
     throw new ApiError(err.detail || "Request failed", res.status);
@@ -206,6 +259,108 @@ export type AgentReport = {
 
 export type ExportFormat = "json" | "markdown" | "html" | "csv" | "pdf";
 
+// ── Phase 2: Knowledge Graph ──
+
+export type NodeDependencies = {
+  node_id: string;
+  upstream: string[];
+  downstream: string[];
+  dependency_paths: string[][];
+};
+
+// ── Phase 3: CI/CD Webhook Review ──
+
+export type GithubWebhookPayload = Record<string, unknown>;
+
+export type WebhookReviewResult = {
+  comments_markdown: string;
+  status?: string;
+};
+
+// ── Phase 4: Live Cloud Integration ──
+
+export type CloudDrift = {
+  resource_name: string;
+  severity: string;
+  parameter: string;
+  intended: string;
+  actual: string;
+};
+
+export type CloudMissingComponent = {
+  label: string;
+  remediation: string;
+};
+
+export type CloudSecurityIssue = {
+  resource_name: string;
+  severity: string;
+  vulnerability: string;
+  remediation: string;
+};
+
+export type CloudScanResult = {
+  scan_summary: string;
+  drift: CloudDrift[];
+  missing_components: CloudMissingComponent[];
+  security_issues: CloudSecurityIssue[];
+};
+
+// ── Phase 4: FinOps Cost Optimization ──
+
+export type FinOpsProjections = {
+  current_monthly_usd: number;
+  next_month_projected_usd: number;
+  next_year_projected_usd: number;
+  potential_savings_monthly_usd: number;
+};
+
+export type FinOpsWaste = {
+  component: string;
+  potential_savings_monthly_usd: number;
+  issue: string;
+  opportunity: string;
+};
+
+export type FinOpsRightsizing = {
+  resource: string;
+  current_sku: string;
+  recommended_sku: string;
+  rationale: string;
+  monthly_savings_usd: number;
+};
+
+export type FinOpsResult = {
+  monthly_projections: FinOpsProjections;
+  waste_analysis: FinOpsWaste[];
+  rightsizing_opportunities: FinOpsRightsizing[];
+};
+
+// ── Phase 4: Compliance Audits ──
+
+export type ComplianceFrameworkReadiness = {
+  score: number;
+  gaps: string[];
+};
+
+export type ComplianceResult = {
+  readiness: Record<string, ComplianceFrameworkReadiness>;
+  recommendation: string;
+};
+
+// ── Phase 4: AI Pair Architect ──
+
+export type PairArchitectMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
+export type PairArchitectResult = {
+  ai_reply: string;
+  updated_mermaid?: string;
+  suggested_questions?: string[];
+};
+
 export const api = {
   // Best-effort ping to wake the (Render free-tier) backend while the user is
   // still on the landing/login page, so the first real request isn't a cold start.
@@ -320,7 +475,7 @@ export const api = {
     prompt: string;
     target_users?: string;
     cloud_provider?: string;
-    constraints?: Record<string, any>;
+    constraints?: Record<string, unknown>;
   }) =>
     request<Analysis>("/api/analyses/generate", {
       method: "POST",
@@ -364,7 +519,7 @@ export const api = {
   // ── Phase 2: Knowledge Graph ──
 
   getNodeDependencies: (analysisId: string, nodeId: string) =>
-    request<any>(`/api/analyses/${analysisId}/graph/dependencies/${encodeURIComponent(nodeId)}`),
+    request<NodeDependencies>(`/api/analyses/${analysisId}/graph/dependencies/${encodeURIComponent(nodeId)}`),
 
   getGraphImpactMatrix: (analysisId: string) =>
     request<NodeImpact[]>(`/api/analyses/${analysisId}/graph/impact`),
@@ -386,8 +541,8 @@ export const api = {
 
   // ── Phase 3: CI/CD Webhook Review ──
 
-  githubPrWebhook: (payload: any) =>
-    request<any>("/api/analyses/integrations/webhook/github", {
+  githubPrWebhook: (payload: GithubWebhookPayload) =>
+    request<WebhookReviewResult>("/api/analyses/integrations/webhook/github", {
       method: "POST",
       body: JSON.stringify(payload),
     }),
@@ -395,19 +550,19 @@ export const api = {
   // ── Phase 4: Live Cloud Integration ──
 
   scanCloudDrift: (analysisId: string, provider: string) =>
-    request<any>(`/api/analyses/${analysisId}/cloud/scan?provider=${provider}`, {
+    request<CloudScanResult>(`/api/analyses/${analysisId}/cloud/scan?provider=${provider}`, {
       method: "POST",
     }),
 
   // ── Phase 4: FinOps Cost Optimization ──
 
   getFinOpsAnalysis: (analysisId: string) =>
-    request<any>(`/api/analyses/${analysisId}/finops`),
+    request<FinOpsResult>(`/api/analyses/${analysisId}/finops`),
 
   // ── Phase 4: Compliance Audits ──
 
   getComplianceAudit: (analysisId: string) =>
-    request<any>(`/api/analyses/${analysisId}/compliance`),
+    request<ComplianceResult>(`/api/analyses/${analysisId}/compliance`),
 
   // ── Docs Generator ──
 
@@ -447,10 +602,10 @@ export const api = {
 
   runPairArchitectSession: (body: {
     current_mermaid?: string | null;
-    history: any[];
+    history: PairArchitectMessage[];
     new_message: string;
   }) =>
-    request<any>("/api/analyses/pair-architect", {
+    request<PairArchitectResult>("/api/analyses/pair-architect", {
       method: "POST",
       body: JSON.stringify(body),
     }),

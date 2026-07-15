@@ -16,7 +16,7 @@ services:
       - key: SUPABASE_JWT_SECRET
         sync: false
       - key: CORS_ORIGINS
-        value: https://archmind-ai-nine.vercel.app,https://archmind-ai.vercel.app,http://localhost:8080
+        value: https://archmind-ai-topaz.vercel.app,http://localhost:8080
       - key: DEV_MODE
         value: "false"
       - key: PYTHON_VERSION
