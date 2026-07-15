@@ -207,6 +207,16 @@ export type AgentReport = {
 export type ExportFormat = "json" | "markdown" | "html" | "csv" | "pdf";
 
 export const api = {
+  // Best-effort ping to wake the (Render free-tier) backend while the user is
+  // still on the landing/login page, so the first real request isn't a cold start.
+  warmup: (): void => {
+    void fetch(`${API_BASE}/api/health`, {
+      method: "GET",
+      cache: "no-store",
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    }).catch(() => {});
+  },
+
   demoLogin: (email: string, password: string, full_name?: string) =>
     request<{ access_token: string; user: Profile }>("/api/auth/demo-login", {
       method: "POST",
