@@ -1,5 +1,6 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect } from "vitest";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Upload from "../../pages/Upload";
@@ -26,9 +27,10 @@ describe("Upload Page", () => {
     expect(screen.getByText(/Drop your architecture/i)).toBeInTheDocument();
   });
 
-  it("switches to paste tab content", () => {
+  it("switches to paste tab content", async () => {
+    const user = userEvent.setup();
     renderWithProviders(<Upload />);
-    fireEvent.click(screen.getByText("Paste code"));
+    await user.click(screen.getByRole("tab", { name: "Paste code" }));
     expect(screen.getByRole("tab", { name: "Paste code" })).toHaveAttribute("data-state", "active");
   });
 

@@ -1,3 +1,4 @@
+import re
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -40,6 +41,7 @@ Instrumentator().instrument(app).expose(app, endpoint="/metrics")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
+    allow_origin_regex=settings.cors_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -81,7 +83,7 @@ async def security_headers(request: Request, call_next):
 def _cors_headers(request: Request) -> dict[str, str]:
     """Return CORS headers only for allowlisted origins (prevents origin reflection)."""
     origin = request.headers.get("origin", "")
-    if origin in settings.cors_origin_list:
+    if origin and (origin in settings.cors_origin_list or re.fullmatch(settings.cors_origin_regex, origin)):
         return {"Access-Control-Allow-Origin": origin, "Access-Control-Allow-Credentials": "true"}
     return {}
 

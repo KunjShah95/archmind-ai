@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./archmind.db"
     uploads_dir: str = "./uploads"
     cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173,http://localhost:8080,http://127.0.0.1:8080"
+    # Regex allowlist for Vercel deployments/previews (exact-match list can't cover
+    # rotating preview URLs). Matches the project's prod + preview subdomains.
+    cors_origin_regex: str = r"https://archmind-ai[a-z0-9-]*\.vercel\.app"
 
     # Supabase JWT validation (set when using Supabase auth)
     supabase_url: str = ""

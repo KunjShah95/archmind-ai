@@ -5,6 +5,28 @@ import { MemoryRouter } from 'react-router-dom';
 import React from 'react';
 import { server } from '../mocks/server';
 
+// jsdom lacks several DOM APIs that Radix UI and scroll-based components call at
+// runtime. Polyfill them so component tests exercise real behavior instead of crashing.
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = () => {};
+}
+if (!Element.prototype.hasPointerCapture) {
+  Element.prototype.hasPointerCapture = () => false;
+}
+if (!Element.prototype.releasePointerCapture) {
+  Element.prototype.releasePointerCapture = () => {};
+}
+if (!Element.prototype.scrollTo) {
+  Element.prototype.scrollTo = () => {};
+}
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  globalThis.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}
+
 // Enable API mocking before tests.
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 

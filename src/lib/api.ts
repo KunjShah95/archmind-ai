@@ -14,7 +14,12 @@ import type {
   BenchmarkResult
 } from "./types";
 
-const API_BASE = import.meta.env.VITE_API_URL ?? "";
+// Dev uses the Vite proxy (/api -> localhost:8000), so keep same-origin ("").
+// In production, fall back to the deployed backend when VITE_API_URL is unset,
+// otherwise API calls hit the static SPA host and fail with "cannot reach server".
+const API_BASE =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.PROD ? "https://archmind-ai.onrender.com" : "");
 
 export class ApiError extends Error {
   constructor(
@@ -25,7 +30,9 @@ export class ApiError extends Error {
   }
 }
 
-const REQUEST_TIMEOUT_MS = 15_000;
+// Render free tier cold-starts take ~40s after idle. 15s aborted every first
+// request. 60s tolerates the wake-up so retries aren't needed to reach a warm server.
+const REQUEST_TIMEOUT_MS = 60_000;
 
 function getCsrfToken(): string | null {
   const match = document.cookie.match(/(?:^|;\s*)archmind_csrf=([^;]+)/);
