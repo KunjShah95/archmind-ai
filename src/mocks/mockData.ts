@@ -1,4 +1,5 @@
 import type { AnalysisDetail, Finding } from '@/lib/api';
+import type { AgentKey, Severity } from '@/lib/types';
 
 export const createMockAnalysis = (id: string, name?: string): AnalysisDetail => ({
   id,
@@ -33,14 +34,14 @@ export const createMockAnalysis = (id: string, name?: string): AnalysisDetail =>
   generated_artifacts: null,
 });
 
-export const createMockFinding = (analysisId: string, agent: string, severity: string): Finding => ({
+export const createMockFinding = (analysisId: string, agent: AgentKey, severity: Severity): Finding => ({
   id: `${analysisId}-${agent}-${severity}`,
   analysis_id: analysisId,
-  agent: agent as any,
+  agent,
   title: `${agent} finding`,
   summary: `This is a ${severity} severity finding from the ${agent} agent.`,
   recommendation: `Fix the ${agent} issue.`,
-  severity: severity as any,
+  severity,
   start_line: null,
   end_line: null,
   created_at: new Date().toISOString(),

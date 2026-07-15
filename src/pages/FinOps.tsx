@@ -25,13 +25,14 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
+import type { FinOpsResult, FinOpsWaste, FinOpsRightsizing } from "@/lib/api";
 
 export default function FinOps() {
   const [searchParams] = useSearchParams();
   const initialId = searchParams.get("analysisId") || "";
 
   const [selectedId, setSelectedId] = useState<string>(initialId);
-  const [finopsData, setFinopsData] = useState<any>(null);
+  const [finopsData, setFinopsData] = useState<FinOpsResult | null>(null);
 
   const { data: analyses = [] } = useQuery({
     queryKey: ["analyses"],
@@ -163,7 +164,7 @@ export default function FinOps() {
               </div>
               <div className="space-y-3 max-h-[240px] overflow-y-auto pr-1">
                 {finopsData.waste_analysis.length > 0 ? (
-                  finopsData.waste_analysis.map((w: any, idx: number) => (
+                  finopsData.waste_analysis.map((w: FinOpsWaste, idx: number) => (
                     <div key={idx} className="p-3 rounded-lg border border-border bg-background/50 space-y-1">
                       <div className="flex justify-between text-xs font-bold">
                         <span>{w.component}</span>
@@ -190,7 +191,7 @@ export default function FinOps() {
               Instance Rightsizing Recommendations
             </h4>
             <div className="divide-y divide-border/60">
-              {finopsData.rightsizing_opportunities.map((ro: any, i: number) => (
+              {finopsData.rightsizing_opportunities.map((ro: FinOpsRightsizing, i: number) => (
                 <div key={i} className="py-3 first:pt-0 last:pb-0 grid md:grid-cols-4 gap-2 text-xs">
                   <div>
                     <span className="text-[10px] uppercase font-bold text-muted-foreground block">Resource</span>

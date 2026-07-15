@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
+import type { ComplianceResult } from "@/lib/api";
 
 const FRAMEWORKS = [
   { key: "soc_2", name: "SOC 2 Type II", focus: "Trust services security policies" },
@@ -30,7 +31,7 @@ export default function Compliance() {
 
   const [selectedId, setSelectedId] = useState<string>(initialId);
   const [activeTab, setActiveTab] = useState("soc_2");
-  const [complianceData, setComplianceData] = useState<any>(null);
+  const [complianceData, setComplianceData] = useState<ComplianceResult | null>(null);
 
   const { data: analyses = [] } = useQuery({
     queryKey: ["analyses"],

@@ -53,9 +53,9 @@ export function overallScore(scores: Record<string, number>) {
 export type GeneratedArtifacts = {
   tech_stack: Record<string, string>;
   database_choices: Array<{ name: string; purpose: string; rationale: string }>;
-  api_design: Record<string, any>;
-  queue_system: Record<string, any>;
-  cdn_strategy: Record<string, any>;
+  api_design: Record<string, unknown>;
+  queue_system: Record<string, unknown>;
+  cdn_strategy: Record<string, unknown>;
   kubernetes_manifest: string;
   terraform_starter: string;
 };

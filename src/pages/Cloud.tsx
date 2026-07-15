@@ -16,6 +16,12 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
+import type {
+  CloudScanResult,
+  CloudDrift,
+  CloudMissingComponent,
+  CloudSecurityIssue,
+} from "@/lib/api";
 
 const CLOUD_PROVIDERS = [
   { value: "aws", label: "Amazon Web Services (AWS)", color: "text-orange-400" },
@@ -29,7 +35,7 @@ export default function LiveCloud() {
 
   const [selectedId, setSelectedId] = useState<string>(initialId);
   const [provider, setProvider] = useState("aws");
-  const [scanResult, setScanResult] = useState<any>(null);
+  const [scanResult, setScanResult] = useState<CloudScanResult | null>(null);
 
   const { data: analyses = [] } = useQuery({
     queryKey: ["analyses"],
@@ -171,7 +177,7 @@ export default function LiveCloud() {
                 </h4>
                 {scanResult.drift.length > 0 ? (
                   <div className="divide-y divide-border/60">
-                    {scanResult.drift.map((d: any, i: number) => (
+                    {scanResult.drift.map((d: CloudDrift, i: number) => (
                       <div key={i} className="py-3 first:pt-0 last:pb-0 space-y-1">
                         <div className="flex justify-between text-xs">
                           <span className="font-semibold text-foreground">{d.resource_name}</span>
@@ -207,7 +213,7 @@ export default function LiveCloud() {
                 </h4>
                 {scanResult.missing_components.length > 0 ? (
                   <div className="divide-y divide-border/60">
-                    {scanResult.missing_components.map((mc: any, i: number) => (
+                    {scanResult.missing_components.map((mc: CloudMissingComponent, i: number) => (
                       <div key={i} className="py-3 first:pt-0 last:pb-0 space-y-1">
                         <div className="text-xs font-semibold text-foreground">{mc.label}</div>
                         <p className="text-xs text-muted-foreground">{mc.remediation}</p>
@@ -229,7 +235,7 @@ export default function LiveCloud() {
                 </h4>
                 {scanResult.security_issues.length > 0 ? (
                   <div className="space-y-3">
-                    {scanResult.security_issues.map((si: any, i: number) => (
+                    {scanResult.security_issues.map((si: CloudSecurityIssue, i: number) => (
                       <div key={i} className="p-3 rounded-lg border border-red-500/20 bg-red-500/5 space-y-1">
                         <div className="flex justify-between text-xs font-bold text-red-400">
                           <span>{si.resource_name}</span>

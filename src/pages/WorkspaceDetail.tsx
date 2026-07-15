@@ -60,7 +60,7 @@ export default function WorkspaceDetail() {
       setInviteEmail("");
       setInviteOpen(false);
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const updateRoleMutation = useMutation({
@@ -70,7 +70,7 @@ export default function WorkspaceDetail() {
       toast.success("Role updated");
       qc.invalidateQueries({ queryKey: ["workspace-members", wsId] });
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const removeMutation = useMutation({
@@ -79,7 +79,7 @@ export default function WorkspaceDetail() {
       toast.success("Member removed");
       qc.invalidateQueries({ queryKey: ["workspace-members", wsId] });
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: Error) => toast.error(e.message),
   });
 
   if (wsLoading) {

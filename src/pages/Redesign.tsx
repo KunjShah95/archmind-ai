@@ -15,8 +15,9 @@ import { toast } from "sonner";
 import { api, ApiError } from "@/lib/api";
 import type { RedesignResult, RedesignStrategy } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import type { LucideIcon } from "lucide-react";
 
-const STRATEGY_ICONS: Record<string, any> = {
+const STRATEGY_ICONS: Record<string, LucideIcon> = {
   DollarSign, Gauge, HeartPulse, Building: Building2, Rocket, Globe,
 };
 

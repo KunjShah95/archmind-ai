@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- test-utility module: re-exports helpers/testing-library, not a React fast-refresh boundary */
 import '@testing-library/jest-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render } from '@testing-library/react';

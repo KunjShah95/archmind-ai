@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
+import type { GithubWebhookPayload } from "@/lib/api";
 
 const SAMPLE_PAYLOAD = {
   action: "opened-mock",
@@ -107,7 +108,7 @@ export default function Integrations() {
   const [reviewOutput, setReviewOutput] = useState<string>("");
 
   const webhookMutation = useMutation({
-    mutationFn: (payload: any) => api.githubPrWebhook(payload),
+    mutationFn: (payload: GithubWebhookPayload) => api.githubPrWebhook(payload),
     onSuccess: (data) => {
       setReviewOutput(data.comments_markdown || "Review completed successfully.");
       toast.success("Webhook pull request reviewed successfully!");

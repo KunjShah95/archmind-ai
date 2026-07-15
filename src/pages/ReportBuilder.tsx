@@ -59,7 +59,8 @@ export default function ReportBuilder() {
   const toggleSection = (sectionId: string) => {
     setSelectedSections((prev) => {
       const next = new Set(prev);
-      next.has(sectionId) ? next.delete(sectionId) : next.add(sectionId);
+      if (next.has(sectionId)) next.delete(sectionId);
+      else next.add(sectionId);
       return next;
     });
   };
@@ -67,7 +68,8 @@ export default function ReportBuilder() {
   const toggleSeverity = (sev: string) => {
     setSeverityFilter((prev) => {
       const next = new Set(prev);
-      next.has(sev) ? next.delete(sev) : next.add(sev);
+      if (next.has(sev)) next.delete(sev);
+      else next.add(sev);
       return next;
     });
   };
@@ -78,8 +80,8 @@ export default function ReportBuilder() {
     try {
       await api.downloadExport(id, "pdf", `${analysis?.name ?? "report"}-custom`);
       toast.success("Report exported");
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Export failed");
     } finally {
       setExporting(false);
     }

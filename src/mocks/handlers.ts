@@ -29,10 +29,10 @@ export const handlers = [
   }),
   
   http.post(`${API_BASE}/pair-architect/session`, async ({ request }) => {
-    const body = await request.json();
+    const body = (await request.json()) as { current_mermaid: string };
     return HttpResponse.json({
       ai_reply: "Here's your updated diagram based on your input.",
-      updated_mermaid: (body as any).current_mermaid.replace('Client', 'User'),
+      updated_mermaid: body.current_mermaid.replace('Client', 'User'),
     });
   }),
   

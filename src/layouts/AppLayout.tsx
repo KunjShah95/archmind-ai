@@ -7,6 +7,7 @@ import {
   RefreshCw, Activity, Flame, MessageSquare, Award, GitPullRequest,
   Bot, DollarSign, ShieldAlert, Cloud, TrendingUp, Sparkles,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,7 @@ import {
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-type NavItem = { to: string; label: string; icon: any };
+type NavItem = { to: string; label: string; icon: LucideIcon };
 type NavSection = { title: string; items: NavItem[] };
 
 const NAV_SECTIONS: NavSection[] = [

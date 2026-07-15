@@ -29,7 +29,7 @@ export function useInviteMember(workspaceId: string) {
       toast.success(`Invited ${email}`);
       qc.invalidateQueries({ queryKey: qk.workspaceMembers(workspaceId) });
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: Error) => toast.error(e.message),
   });
 }
 
@@ -42,7 +42,7 @@ export function useUpdateMemberRole(workspaceId: string) {
       toast.success("Role updated");
       qc.invalidateQueries({ queryKey: qk.workspaceMembers(workspaceId) });
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: Error) => toast.error(e.message),
   });
 }
 
@@ -55,7 +55,7 @@ export function useRemoveMember(workspaceId: string) {
       qc.invalidateQueries({ queryKey: qk.workspaceMembers(workspaceId) });
       qc.invalidateQueries({ queryKey: qk.workspace(workspaceId) });
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: Error) => toast.error(e.message),
   });
 }
 
@@ -66,7 +66,7 @@ export function useCreateShareLink() {
       const url = `${window.location.origin}${link.url}`;
       navigator.clipboard.writeText(url).then(() => toast.success("Share link copied"));
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: Error) => toast.error(e.message),
   });
 }
 

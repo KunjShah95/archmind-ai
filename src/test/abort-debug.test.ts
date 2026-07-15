@@ -5,8 +5,8 @@ describe("abort debug", () => {
     try {
       const signal = AbortSignal.timeout(15000);
       expect(signal).toBeDefined();
-    } catch (e: any) {
-      console.log("AbortSignal.timeout error:", e.message);
+    } catch (e) {
+      console.log("AbortSignal.timeout error:", e instanceof Error ? e.message : String(e));
     }
   });
 

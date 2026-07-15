@@ -69,7 +69,7 @@ export const handlers = [
   }),
 
   http.post(`${API_BASE}/analyses`, async ({ request }) => {
-    const body = (await request.json()) as any;
+    const body = (await request.json()) as { name?: string; source_content?: string };
     if (!body?.source_content?.trim()) {
       return HttpResponse.json({ detail: "Diagram content is required" }, { status: 400 });
     }
@@ -82,7 +82,7 @@ export const handlers = [
   }),
 
   http.post(`${API_BASE}/analyses/:id/chat`, async ({ request }) => {
-    const body = (await request.json()) as any;
+    const body = (await request.json()) as { message: string };
     return HttpResponse.json({
       id: "chat-1",
       analysis_id: "test-analysis-1",

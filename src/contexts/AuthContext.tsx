@@ -17,6 +17,7 @@ type AuthState = {
   refreshProfile: () => Promise<void>;
 };
 
+// eslint-disable-next-line react-refresh/only-export-components -- the context and its useAuth hook are intentionally co-located with the provider
 export const AuthContext = createContext<AuthState | null>(null);
 
 async function syncTokenAndProfile(token: string, supabaseUser?: { id: string; email?: string; user_metadata?: Record<string, unknown> }): Promise<Profile> {
@@ -203,6 +204,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- the useAuth hook is intentionally co-located with the AuthProvider
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
