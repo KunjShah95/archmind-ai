@@ -4,7 +4,6 @@ Holds a dialogue sessions with the user, progressively updating a system diagram
 and posing critical design trade-off questions.
 """
 
-import json
 from typing import Any, Dict, List
 from app.services.llm import llm_complete, _extract_json
 

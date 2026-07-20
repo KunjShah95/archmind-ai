@@ -12,7 +12,6 @@ from app.services.github_import import import_github_repo
 from app.services.pipeline import (
     check_and_increment_quota,
     ensure_default_workspace,
-    increment_usage,
 )
 from app.services.slack import format_analysis_message, send_slack_message
 

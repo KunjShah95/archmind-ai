@@ -4,7 +4,6 @@ Agents: Security, Cost, Scalability, and DevOps.
 Allows users to input a design dilemma, run a simulated discussion, and get a consensus recommendation.
 """
 
-import json
 from typing import Any, Dict, List
 from app.services.llm import llm_complete, _extract_json
 
@@ -48,9 +47,6 @@ def run_debate_llm(topic: str, nodes: List[dict]) -> Dict[str, Any] | None:
 
 def run_debate_heuristic(topic: str, nodes: List[dict]) -> Dict[str, Any]:
     # Heuristic fallback if no LLM
-    from app.services.diagram import node_labels as get_node_labels
-    labels = list(get_node_labels(nodes).values()) if nodes else []
-    
     transcript = [
         {
             "agent": "Scalability Agent",

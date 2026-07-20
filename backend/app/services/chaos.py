@@ -4,7 +4,6 @@ Simulates failure scenarios such as component crashes, region outages, and queue
 Calculates cascading impacts and suggests mitigation strategies.
 """
 
-import json
 from typing import Any, Dict, List
 from app.services.llm import llm_complete, _extract_json
 from app.services.diagram import node_labels

@@ -12,9 +12,9 @@ def calculate_finops_projections(nodes: List[dict], edges: List[dict]) -> Dict[s
     node_count = len(nodes)
 
     # Heuristically count compute, database, cache nodes
-    vms = sum(1 for l in labels if any(k in l.lower() for k in ["api", "service", "worker", "monolith", "client"]))
-    dbs = sum(1 for l in labels if any(k in l.lower() for k in ["db", "database", "postgres", "mysql", "replica"]))
-    caches = sum(1 for l in labels if any(k in l.lower() for k in ["redis", "cache", "memcached"]))
+    vms = sum(1 for label in labels if any(k in label.lower() for k in ["api", "service", "worker", "monolith", "client"]))
+    dbs = sum(1 for label in labels if any(k in label.lower() for k in ["db", "database", "postgres", "mysql", "replica"]))
+    caches = sum(1 for label in labels if any(k in label.lower() for k in ["redis", "cache", "memcached"]))
 
     # Base pricing model
     vm_cost = vms * 40

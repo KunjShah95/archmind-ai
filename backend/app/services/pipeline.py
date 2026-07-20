@@ -1,5 +1,3 @@
-import os
-import shutil
 import uuid
 from contextlib import contextmanager
 from pathlib import Path
@@ -18,7 +16,6 @@ from app.services.iac_review import review_iac
 from app.services.api_review import review_api
 from app.services.db_review import review_database
 from app.observability import get_logger
-from app.services.retry import schedule_retry
 from app.errors import PipelineError
 
 settings = get_settings()
@@ -111,8 +108,6 @@ def run_analysis_pipeline(db: Session, analysis_id: str) -> None:
 
     analysis.status = "analyzing"
     db.commit()
-
-    logger = get_logger(analysis_id=analysis_id)
 
     content = analysis.source_content
     if not content and analysis.file_path:

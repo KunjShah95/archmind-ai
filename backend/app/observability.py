@@ -20,7 +20,6 @@ def set_correlation_id(cid: str | None = None) -> str:
 
 
 def configure_logging() -> None:
-    import sys
 
     from app.config import get_settings
     settings = get_settings()

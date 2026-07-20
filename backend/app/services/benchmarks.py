@@ -4,7 +4,6 @@ Reference patterns: Netflix-style microservices, Uber event-driven, Airbnb booki
 Calculates pattern matches, similarity scores, and highlights structural gaps.
 """
 
-import json
 from typing import Any, Dict, List
 from app.services.llm import llm_complete, _extract_json
 from app.services.diagram import node_labels
@@ -75,7 +74,7 @@ def benchmark_architecture_llm(nodes: List[dict], edges: List[dict]) -> Dict[str
     return _extract_json(result)
 
 def benchmark_architecture_heuristic(nodes: List[dict], edges: List[dict]) -> Dict[str, Any]:
-    labels = [l.lower() for l in node_labels(nodes).values()]
+    labels = [label.lower() for label in node_labels(nodes).values()]
     evals = []
     
     # Heuristically check matching for each pattern
@@ -115,7 +114,7 @@ def benchmark_architecture_heuristic(nodes: List[dict], edges: List[dict]) -> Di
             else:
                 keywords = [comp_lower]
 
-            if any(any(kw in l for kw in keywords) for l in labels):
+            if any(any(kw in label for kw in keywords) for label in labels):
                 matched.append(comp)
             else:
                 missing.append(comp)

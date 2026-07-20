@@ -21,9 +21,6 @@ from app.schemas import (
     FindingOut,
     GenerateRequest,
     RedesignRequest,
-    RedesignResult,
-    ComponentExplanation,
-    ArchitectureWalkthrough,
     ChaosRequest,
     DebateRequest,
     PairArchitectRequest,
@@ -38,7 +35,6 @@ from app.services.diagram import detect_diagram_type
 from app.services.pipeline import (
     check_and_increment_quota,
     ensure_default_workspace,
-    increment_usage,
     release_analysis_slot,
     run_analysis_pipeline,
     save_upload,

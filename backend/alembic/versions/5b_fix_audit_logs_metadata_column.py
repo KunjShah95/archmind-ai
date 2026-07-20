@@ -26,14 +26,10 @@ depends_on: str | None = None
 
 
 def _has_column(conn, table: str, column: str) -> bool:
-    result = conn.execute(
-        sa.text(
-            "SELECT 1 FROM information_schema.columns "
-            "WHERE table_schema='public' AND table_name=:t AND column_name=:c"
-        ),
-        {"t": table, "c": column},
-    )
-    return result.fetchone() is not None
+    # sa.inspect respects the active schema/search_path and is dialect-agnostic
+    # (works on the sqlite dev DB and Postgres alike, incl. custom schemas).
+    inspector = sa.inspect(conn)
+    return column in {col["name"] for col in inspector.get_columns(table)}
 
 
 def upgrade() -> None:

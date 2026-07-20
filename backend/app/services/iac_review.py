@@ -4,7 +4,7 @@ Audits Kubernetes manifests, Helm charts, Terraform configurations, and Docker C
 for security vulnerabilities, cost waste, and best practice violations.
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict
 from app.services.llm import llm_complete, _extract_json
 
 _IAC_SYSTEM = (

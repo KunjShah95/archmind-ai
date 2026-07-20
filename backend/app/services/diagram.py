@@ -194,5 +194,5 @@ def node_labels(nodes: list[dict]) -> dict[str, str]:
 
 
 def has_component(labels: list[str], *keywords: str) -> bool:
-    lower = [l.lower() for l in labels]
-    return any(any(kw in l for kw in keywords) for l in lower)
+    lower = [label.lower() for label in labels]
+    return any(any(kw in label for kw in keywords) for label in lower)

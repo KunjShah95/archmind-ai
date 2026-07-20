@@ -33,10 +33,7 @@ def compare_actual_vs_intended(nodes: List[dict], edges: List[dict], actual_reso
     drift = []
     missing = []
     security_issues = []
-    
-    # Simple matching checks
-    labels_lower = [l.lower() for l in labels.values()]
-    
+
     # 1. Check for missing services in the actual deployment
     for nid, label in labels.items():
         matched = False
@@ -48,7 +45,7 @@ def compare_actual_vs_intended(nodes: List[dict], edges: List[dict], actual_reso
             missing.append({
                 "node_id": nid,
                 "label": label,
-                "remediation": f"Provision this component using Terraform or CloudFormation."
+                "remediation": "Provision this component using Terraform or CloudFormation."
             })
 
     # 2. Check for configuration drift & security issues based on mock properties

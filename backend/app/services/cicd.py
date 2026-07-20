@@ -4,8 +4,7 @@ Processes pull request events from GitHub and GitLab, identifies infrastructure,
 and returns automated review recommendations suited for PR comment postings.
 """
 
-import json
-from typing import Any, Dict, List
+from typing import Any, Dict
 from app.services.iac_review import review_iac
 from app.services.api_review import review_api
 from app.services.db_review import review_database
@@ -86,7 +85,7 @@ def process_github_pr_webhook(payload: Dict[str, Any]) -> Dict[str, Any]:
     avg_score = round(total_score / file_count) if file_count > 0 else 100
 
     # Build final PR comment summary
-    pr_comment = f"## 🤖 ArchMind AI PR Review Summary\n"
+    pr_comment = "## 🤖 ArchMind AI PR Review Summary\n"
     pr_comment += f"We reviewed {file_count} configuration/infrastructure files. **Average Security & Practice Score: {avg_score}/100**\n\n"
     
     if comments:

@@ -4,7 +4,6 @@ Simulates load for 1K, 100K, 1M, 10M, and 100M users.
 Estimates latency, throughput, cost, autoscaling, and failure points.
 """
 
-import json
 from typing import Any, Dict, List
 from app.services.llm import llm_complete, _extract_json
 from app.services.diagram import node_labels
@@ -53,9 +52,9 @@ def simulate_traffic_heuristic(nodes: List[dict], edges: List[dict]) -> Dict[str
     node_count = len(nodes)
     
     # Check for cache and queue components
-    has_cache = any(any(k in l.lower() for k in ["cache", "redis", "memcached"]) for l in labels)
-    has_queue = any(any(k in l.lower() for k in ["queue", "kafka", "rabbitmq", "sqs", "pubsub"]) for l in labels)
-    has_db_replica = any(any(k in l.lower() for k in ["replica", "secondary", "slave", "read-replica"]) for l in labels)
+    has_cache = any(any(k in label.lower() for k in ["cache", "redis", "memcached"]) for label in labels)
+    has_queue = any(any(k in label.lower() for k in ["queue", "kafka", "rabbitmq", "sqs", "pubsub"]) for label in labels)
+    has_db_replica = any(any(k in label.lower() for k in ["replica", "secondary", "slave", "read-replica"]) for label in labels)
 
     results = {}
     scales = [

@@ -73,7 +73,7 @@ def detect_patterns(node_labels: list[str], edge_descriptions: list[str]) -> lis
     Returns list of PatternMatch ordered by similarity (highest first).
     Empty list if no patterns detected.
     """
-    labels_lower = [l.lower() for l in node_labels]
+    labels_lower = [label.lower() for label in node_labels]
     edges_text = " ".join(edge_descriptions).lower()
     all_text = " ".join(labels_lower) + " " + edges_text
     

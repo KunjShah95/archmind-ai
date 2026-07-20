@@ -12,7 +12,7 @@ import re
 from typing import Any
 
 from app.services.llm import llm_complete, _extract_json
-from app.services.diagram import parse_mermaid, _layout
+from app.services.diagram import parse_mermaid
 
 
 # ── LLM-based generation ──────────────────────────────────────────────

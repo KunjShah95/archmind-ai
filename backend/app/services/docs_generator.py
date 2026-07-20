@@ -61,7 +61,7 @@ def build_readme(
         lines.append("_No connections detected._")
 
     lines += ["", "## Quality Scores", ""]
-    lines += [f"| Dimension | Score |", "|---|---|"]
+    lines += ["| Dimension | Score |", "|---|---|"]
     lines += [f"| {k.capitalize()} | {v}/100 |" for k, v in sorted(scores.items())]
 
     top = _sorted_findings(findings)[:10]
@@ -227,7 +227,7 @@ def build_runbook(
                 f"### {i}. {f['title']}",
                 "",
                 f"- **Severity:** {f['severity'].upper()}",
-                f"- **Detection:** Monitor for signs matching this finding",
+                "- **Detection:** Monitor for signs matching this finding",
                 f"- **Impact:** {f['summary']}",
                 f"- **Response:** {f['recommendation']}",
                 "",

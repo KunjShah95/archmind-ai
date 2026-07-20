@@ -4,7 +4,7 @@ Audits database DDL schemas, table structures, and indexing patterns to recommen
 sharding, partition, and read replica configurations.
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict
 from app.services.llm import llm_complete, _extract_json
 
 _DB_REVIEW_SYSTEM = (

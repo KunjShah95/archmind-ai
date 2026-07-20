@@ -1,9 +1,7 @@
 """Multi-signal ensemble scoring with confidence metrics."""
 
-import math
 import statistics
 from dataclasses import dataclass, field
-from typing import Callable
 
 
 @dataclass

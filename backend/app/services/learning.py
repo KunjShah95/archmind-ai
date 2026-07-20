@@ -5,7 +5,6 @@ alternatives, best practices, and common mistakes. Great for students and
 junior engineers learning system design.
 """
 
-import json
 from typing import Any
 
 from app.services.llm import llm_complete, _extract_json

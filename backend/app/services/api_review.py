@@ -4,7 +4,7 @@ Audits OpenAPI and Swagger specifications for versioning, authentication,
 rate limiting, resource naming, and error handling consistency.
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict
 from app.services.llm import llm_complete, _extract_json
 
 _API_REVIEW_SYSTEM = (

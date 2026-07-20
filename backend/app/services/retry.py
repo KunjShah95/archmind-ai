@@ -5,14 +5,12 @@ Retry logic and dead-letter queue for failed analyses.
 from __future__ import annotations
 
 import random
-from typing import List
 
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.models import FailedAnalysis
-from app.database import SessionLocal
 from datetime import datetime, timedelta
 
 
@@ -67,8 +65,8 @@ def schedule_retry(
     
     # Calculate initial retry delay (first retry after 1 minute)
     delay_seconds = _calculate_backoff(attempt=0)
-    next_retry_at = datetime.utcnow() + timedelta(seconds=delay_seconds)
-    
+    failed.next_retry_at = datetime.utcnow() + timedelta(seconds=delay_seconds)
+
     db.add(failed)
     try:
         db.commit()
@@ -146,8 +144,8 @@ def mark_retry_attempt(
         
         # Calculate next retry delay
         delay_seconds = _calculate_backoff(attempt=failed_analysis.retry_count)
-        next_retry_at = datetime.utcnow() + timedelta(seconds=delay_seconds)
-    
+        failed_analysis.next_retry_at = datetime.utcnow() + timedelta(seconds=delay_seconds)
+
     try:
         db.commit()
     except SQLAlchemyError:

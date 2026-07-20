@@ -6,7 +6,6 @@ enterprise_scale, startup_mvp, multi_region.
 Each produces a transformed architecture with change summary and trade-off analysis.
 """
 
-import json
 from typing import Any
 
 from app.services.llm import llm_complete, _extract_json
