@@ -27,6 +27,18 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
     disconnect() {}
   };
 }
+// jsdom's AbortSignal lacks the static `timeout` helper that the API client uses
+// to bound every request. Polyfill it so request-layer tests exercise real code.
+if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout !== 'function') {
+  AbortSignal.timeout = (ms: number) => {
+    const controller = new AbortController();
+    setTimeout(
+      () => controller.abort(new DOMException('The operation timed out.', 'TimeoutError')),
+      ms,
+    );
+    return controller.signal;
+  };
+}
 
 // Enable API mocking before tests.
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));

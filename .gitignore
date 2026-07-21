@@ -30,6 +30,16 @@ graphify-out/
 /*.png
 !public/**/*.png
 
+# Scratch/planning files (keep out of repo)
+original.txt
+temp_original.py
+V2_FULL_STACK_PLAN.md
+
+# Backup/editor leftovers
+*.bak
+*.orig
+*.tmp
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
