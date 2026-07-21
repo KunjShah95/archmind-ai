@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import { SeoMeta } from "@/components/SeoMeta";
 import { Logo } from "@/components/Logo";
 
 export function StaticPageShell({
@@ -11,8 +12,26 @@ export function StaticPageShell({
   lastUpdated?: string;
   children: React.ReactNode;
 }) {
+  const pathMap: Record<string, string> = {
+    "Privacy Policy": "/privacy",
+    "Terms of Service": "/terms",
+    Security: "/security",
+    Contact: "/contact",
+  };
+  const descMap: Record<string, string> = {
+    "Privacy Policy": "ArchMind AI privacy policy — how we collect, use, and protect your data.",
+    "Terms of Service": "ArchMind AI terms of service — conditions for using the platform.",
+    Security: "ArchMind AI security practices — encryption, access control, and responsible disclosure.",
+    Contact: "Get in touch with the ArchMind AI team. Bug reports, support, and community.",
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col" style={{ fontFamily: "'Manrope', sans-serif" }}>
+      <SeoMeta
+        title={`${title} | ArchMind AI`}
+        description={descMap[title] || `ArchMind AI ${title.toLowerCase()} page.`}
+        canonicalPath={pathMap[title] || `/${title.toLowerCase().replace(/\s+/g, "-")}`}
+      />
       {/* Header */}
       <header
         className="sticky top-0 z-40 bg-background"

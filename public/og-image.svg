@@ -1,1 +1,184 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0f0f1a"/><stop offset="100%" stop-color="#1a1a2e"/></linearGradient></defs><rect width="1200" height="630" fill="url(#bg)"/><g transform="translate(80,260)"><path d="M4 30 L30 4 L56 30" stroke="#6d5df6" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 22 H48" stroke="#6d5df6" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="30" cy="44" r="4" fill="#6d5df6"/></g><text x="120" y="298" font-family="Inter,sans-serif" font-size="48" font-weight="700" fill="#ffffff">ArchMind</text><text x="120" y="358" font-family="Inter,sans-serif" font-size="24" font-weight="400" fill="#a0a0b8">The AI Staff Architect for your team</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <!-- Background gradient -->
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0d0d1a"/>
+      <stop offset="50%" stop-color="#121224"/>
+      <stop offset="100%" stop-color="#0a0a14"/>
+    </linearGradient>
+
+    <!-- Coral accent gradient -->
+    <linearGradient id="accentGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#f0794a"/>
+      <stop offset="100%" stop-color="#d95b2a"/>
+    </linearGradient>
+
+    <!-- Subtle glow -->
+    <radialGradient id="glow" cx="0.5" cy="0.4" r="0.7">
+      <stop offset="0%" stop-color="#f0794a" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#f0794a" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Blueprint grid -->
+    <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+      <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#1a1a35" stroke-width="0.5"/>
+    </pattern>
+    <pattern id="dots" width="15" height="15" patternUnits="userSpaceOnUse">
+      <circle cx="7.5" cy="7.5" r="0.6" fill="#1e1e3a"/>
+    </pattern>
+
+    <!-- Logo gradient -->
+    <linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f0794a"/>
+      <stop offset="100%" stop-color="#d95b2a"/>
+    </linearGradient>
+
+    <!-- Agent circle glow -->
+    <filter id="agentGlow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <clipPath id="roundedRect">
+      <rect width="1200" height="630" rx="0"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGrad)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  <rect width="1200" height="630" fill="url(#dots)"/>
+
+  <!-- Decorative circles (subtle geometric) -->
+  <circle cx="1050" cy="120" r="180" fill="none" stroke="#1a1a35" stroke-width="1" opacity="0.5"/>
+  <circle cx="1050" cy="120" r="250" fill="none" stroke="#1a1a35" stroke-width="0.5" opacity="0.3"/>
+  <circle cx="1050" cy="120" r="320" fill="none" stroke="#1a1a35" stroke-width="0.3" opacity="0.2"/>
+
+  <!-- Seven agent dots in a row (top-right) -->
+  <g transform="translate(820, 80)">
+    <rect x="-10" y="-14" width="370" height="28" rx="14" fill="#141428" stroke="#1e1e3a" stroke-width="0.8"/>
+    <text x="0" y="2" font-family="'Inter',system-ui,sans-serif" font-size="11" font-weight="600" fill="#a0a0b8" letter-spacing="1.5">7 SPECIALIZED AI AGENTS</text>
+  </g>
+
+  <!-- Seven agents row -->
+  <g transform="translate(810, 125)">
+    <rect x="-10" y="-10" width="390" height="44" rx="22" fill="#141428" stroke="#1e1e3a" stroke-width="0.8"/>
+    <!-- Agent dots -->
+    <g filter="url(#agentGlow)">
+      <circle cx="20" cy="12" r="6" fill="#f0794a"/>
+      <circle cx="58" cy="12" r="6" fill="#6d8df6"/>
+      <circle cx="96" cy="12" r="6" fill="#4ad6a0"/>
+      <circle cx="134" cy="12" r="6" fill="#f0c04a"/>
+      <circle cx="172" cy="12" r="6" fill="#a06df6"/>
+      <circle cx="210" cy="12" r="6" fill="#f66d8d"/>
+      <circle cx="248" cy="12" r="6" fill="#6dd4f6"/>
+    </g>
+    <!-- Agent labels -->
+    <text x="20" y="35" font-family="'Inter',system-ui,sans-serif" font-size="7" font-weight="500" fill="#808098" text-anchor="middle">Scalability</text>
+    <text x="58" y="35" font-family="'Inter',system-ui,sans-serif" font-size="7" font-weight="500" fill="#808098" text-anchor="middle">Security</text>
+    <text x="96" y="35" font-family="'Inter',system-ui,sans-serif" font-size="7" font-weight="500" fill="#808098" text-anchor="middle">Reliability</text>
+    <text x="134" y="35" font-family="'Inter',system-ui,sans-serif" font-size="7" font-weight="500" fill="#808098" text-anchor="middle">Performance</text>
+    <text x="172" y="35" font-family="'Inter',system-ui,sans-serif" font-size="7" font-weight="500" fill="#808098" text-anchor="middle">Cost</text>
+    <text x="210" y="35" font-family="'Inter',system-ui,sans-serif" font-size="7" font-weight="500" fill="#808098" text-anchor="middle">Maint'ability</text>
+    <text x="248" y="35" font-family="'Inter',system-ui,sans-serif" font-size="7" font-weight="500" fill="#808098" text-anchor="middle">Observability</text>
+  </g>
+
+  <!-- --- MAIN CONTENT --- -->
+
+  <!-- Logo icon (the triangle + dot from the brand) -->
+  <g transform="translate(90, 270)">
+    <rect x="-10" y="-10" width="92" height="92" rx="18" fill="#141428" stroke="#1e1e3a" stroke-width="1"/>
+    <g transform="translate(36, 22)">
+      <!-- Triangle -->
+      <path d="M 0 40 L 20 0 L 40 40" fill="none" stroke="url(#logoGrad)" stroke-width="3.5" stroke-linejoin="round"/>
+      <!-- Horizontal line -->
+      <path d="M 8 28 L 32 28" fill="none" stroke="url(#logoGrad)" stroke-width="3" stroke-linecap="round"/>
+      <!-- Dot -->
+      <circle cx="20" cy="44" r="3.5" fill="url(#logoGrad)"/>
+    </g>
+  </g>
+
+  <!-- ArchMind AI title -->
+  <defs>
+    <linearGradient id="titleGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#e0e0f0"/>
+    </linearGradient>
+  </defs>
+  <text x="205" y="300" font-family="'Inter','SF Pro Display',system-ui,sans-serif" font-size="60" font-weight="800" fill="url(#titleGrad)" letter-spacing="-1.5">ArchMind AI</text>
+
+  <!-- Tagline -->
+  <text x="205" y="348" font-family="'Inter',system-ui,sans-serif" font-size="24" font-weight="400" fill="#8080a0" letter-spacing="-0.2">The AI staff architect your team never had.</text>
+
+  <!-- Sub-tagline -->
+  <text x="205" y="382" font-family="'Inter',system-ui,sans-serif" font-size="15" font-weight="400" fill="#606078" letter-spacing="0">Upload diagrams · 7 agent reviews · 3 minute analysis</text>
+
+  <!-- CTA chip -->
+  <rect x="205" y="400" width="160" height="34" rx="17" fill="url(#accentGrad)" opacity="0.9"/>
+  <text x="285" y="422" font-family="'Inter',system-ui,sans-serif" font-size="13" font-weight="600" fill="#ffffff" text-anchor="middle" letter-spacing="0.3">Start building free →</text>
+
+  <!-- Architecture diagram preview (bottom-right) -->
+  <g transform="translate(740, 410)">
+    <rect width="370" height="135" rx="10" fill="#141428" stroke="#1e1e3a" stroke-width="0.8"/>
+
+    <!-- Nodes -->
+    <g>
+      <!-- Client -->
+      <rect x="18" y="22" width="56" height="26" rx="4" fill="#1a1a35" stroke="#2a2a4a" stroke-width="1"/>
+      <text x="46" y="38" font-family="'Inter',sans-serif" font-size="9" font-weight="600" fill="#a0a0b8" text-anchor="middle">Client</text>
+
+      <!-- CDN -->
+      <rect x="98" y="22" width="56" height="26" rx="4" fill="#1a1a35" stroke="#2a2a4a" stroke-width="1"/>
+      <text x="126" y="38" font-family="'Inter',sans-serif" font-size="9" font-weight="600" fill="#a0a0b8" text-anchor="middle">CDN</text>
+
+      <!-- API Gateway (highlighted - coral) -->
+      <rect x="178" y="22" width="72" height="26" rx="4" fill="#1e1e3a" stroke="#f0794a" stroke-width="1.5"/>
+      <text x="214" y="38" font-family="'Inter',sans-serif" font-size="9" font-weight="600" fill="#f0794a" text-anchor="middle">API Gateway</text>
+
+      <!-- Auth -->
+      <rect x="98" y="76" width="56" height="26" rx="4" fill="#1a1a35" stroke="#2a2a4a" stroke-width="1"/>
+      <text x="126" y="92" font-family="'Inter',sans-serif" font-size="9" font-weight="600" fill="#a0a0b8" text-anchor="middle">Auth</text>
+
+      <!-- Orders -->
+      <rect x="178" y="76" width="72" height="26" rx="4" fill="#1a1a35" stroke="#2a2a4a" stroke-width="1"/>
+      <text x="214" y="92" font-family="'Inter',sans-serif" font-size="9" font-weight="600" fill="#a0a0b8" text-anchor="middle">Orders</text>
+
+      <!-- Workers -->
+      <rect x="274" y="76" width="56" height="26" rx="4" fill="#1a1a35" stroke="#2a2a4a" stroke-width="1"/>
+      <text x="302" y="92" font-family="'Inter',sans-serif" font-size="9" font-weight="600" fill="#a0a0b8" text-anchor="middle">Workers</text>
+
+      <!-- Postgres -->
+      <rect x="178" y="96" width="72" height="26" rx="4" fill="#1a1a35" stroke="#2a2a4a" stroke-width="1"/>
+      <text x="214" y="112" font-family="'Inter',sans-serif" font-size="9" font-weight="600" fill="#a0a0b8" text-anchor="middle">Postgres</text>
+    </g>
+
+    <!-- Connection lines -->
+    <path d="M74 35 C 80 35, 92 35, 98 35" stroke="#2a2a4a" stroke-width="0.8" fill="none"/>
+    <path d="M154 35 C 160 35, 172 35, 178 35" stroke="#2a2a4a" stroke-width="0.8" fill="none"/>
+    <path d="M214 48 C 214 56, 126 56, 126 76" stroke="#2a2a4a" stroke-width="0.8" fill="none" stroke-dasharray="3 3"/>
+    <path d="M214 48 C 214 62, 214 70, 214 76" stroke="#2a2a4a" stroke-width="0.8" fill="none" stroke-dasharray="3 3"/>
+    <path d="M250 89 C 262 89, 268 89, 274 89" stroke="#2a2a4a" stroke-width="0.8" fill="none"/>
+    <path d="M214 102 C 214 108, 214 110, 214 96" stroke="#2a2a4a" stroke-width="0.8" fill="none" stroke-dasharray="3 3"/>
+
+    <!-- Animated pulse dot -->
+    <circle cx="260" cy="76" r="3" fill="#f0794a" opacity="0.8">
+      <animate attributeName="r" values="3;5;3" dur="2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.8;0.3;0.8" dur="2s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- Bottom bar -->
+  <line x1="80" y1="575" x2="1120" y2="575" stroke="#1a1a35" stroke-width="0.8"/>
+
+  <!-- URL -->
+  <text x="100" y="596" font-family="'JetBrains Mono','Cascadia Code',monospace" font-size="12" font-weight="400" fill="#505068">archmind.ai</text>
+
+  <!-- GitHub -->
+  <text x="1100" y="596" font-family="'Inter',system-ui,sans-serif" font-size="12" font-weight="400" fill="#505068" text-anchor="end">github.com/KunjShah95/archmind-ai</text>
+</svg>

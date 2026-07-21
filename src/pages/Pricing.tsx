@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { SeoMeta } from "@/components/SeoMeta";
 import { Logo } from "@/components/Logo";
 import { Check, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
@@ -60,6 +61,11 @@ const FAQS = [
 export default function Pricing() {
   return (
     <div className="min-h-screen bg-background" style={{ fontFamily: "'Manrope', sans-serif" }}>
+      <SeoMeta
+        title="ArchMind AI – Simple, Predictable Pricing"
+        description="Start free. Upgrade when your team is ready. Hobby tier: $0. Team tier: $49/user/mo. No hidden fees."
+        canonicalPath="/pricing"
+      />
       {/* Header */}
       <header
         className="sticky top-0 z-40 bg-background"

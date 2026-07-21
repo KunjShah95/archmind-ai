@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Github, ArrowRight, Zap, Shield, Users, Code2 } from "lucide-react";
+import { SeoMeta } from "@/components/SeoMeta";
 import { Logo } from "@/components/Logo";
 
 const GITHUB_URL = "https://github.com/KunjShah95/archmind-ai";
@@ -36,6 +37,11 @@ const TEAM = [
 export default function About() {
   return (
     <div className="min-h-screen bg-background" style={{ fontFamily: "'Manrope', sans-serif" }}>
+      <SeoMeta
+        title="About ArchMind AI – The AI Staff Architect"
+        description="ArchMind provides AI-powered architecture reviews for engineering teams. Learn about our mission, values, and open-source approach."
+        canonicalPath="/about"
+      />
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background" style={{ borderBottom: "1px solid hsl(var(--border))" }}>
         <div className="container h-14 flex items-center justify-between px-4">

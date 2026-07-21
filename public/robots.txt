@@ -1,3 +1,6 @@
+# ── ArchMind AI robots.txt ─────────────────────────────────────────────
+
+# Allow standard crawlers access to public pages
 User-agent: *
 Allow: /
 Disallow: /api/
@@ -19,5 +22,76 @@ Disallow: /cloud
 Disallow: /finops
 Disallow: /compliance
 Disallow: /pair-architect
+
+# Allow AI search crawlers — we want ArchMind cited in AI answers
+User-agent: GPTBot
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /upload
+Disallow: /analyses
+Disallow: /workspaces
+Disallow: /settings
+Disallow: /billing
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /upload
+Disallow: /analyses
+Disallow: /workspaces
+Disallow: /settings
+Disallow: /billing
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /workspaces
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /workspaces
+
+User-agent: Claude-Web
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /workspaces
+
+User-agent: anthropic-ai
+Allow: /
+Disallow: /api/
+
+# Allow common bots for SEO
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+# Block AI training-only crawlers we don't want training on our content
+User-agent: CCBot
+Disallow: /
+
+User-agent: ImagesiftBot
+Disallow: /
 
 Sitemap: https://archmind.ai/sitemap.xml

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { SeoMeta } from "@/components/SeoMeta";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AGENTS } from "@/lib/mock-data";
@@ -91,6 +92,7 @@ function BlueprintGrid({ className = "" }: { className?: string }) {
 export default function Landing() {
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden" style={{ fontFamily: "'Manrope', sans-serif" }}>
+      <SeoMeta />
       <SiteHeader />
       <Hero />
       <LogoCloud />

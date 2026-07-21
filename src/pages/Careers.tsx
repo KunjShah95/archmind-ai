@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Github, ArrowRight, MapPin, Clock } from "lucide-react";
+import { SeoMeta } from "@/components/SeoMeta";
 import { Logo } from "@/components/Logo";
 
 const GITHUB_URL = "https://github.com/KunjShah95/archmind-ai";
@@ -39,6 +40,11 @@ const OPEN_ROLES = [
 export default function Careers() {
   return (
     <div className="min-h-screen bg-background" style={{ fontFamily: "'Manrope', sans-serif" }}>
+      <SeoMeta
+        title="Careers at ArchMind AI – Join the Team"
+        description="Help engineers ship better systems. We're hiring remote engineers, AI/ML specialists, and developer advocates."
+        canonicalPath="/careers"
+      />
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background" style={{ borderBottom: "1px solid hsl(var(--border))" }}>
         <div className="container h-14 flex items-center justify-between px-4">

@@ -2,6 +2,7 @@ import React, { Suspense, lazy, useState, useEffect } from "react";
 import type { ErrorInfo } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -133,14 +134,15 @@ function ThemedToaster() {
 // ─── App ──────────────────────────────────────────────────────────────────────
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <ThemedToaster />
-        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <RouteErrorBoundary>
-            <Suspense fallback={PageLoader}>
-              <Routes>
+  <HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <ThemedToaster />
+          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <RouteErrorBoundary>
+              <Suspense fallback={PageLoader}>
+                <Routes>
                 {/* Public static routes */}
                 <Route path="/" element={<Landing />} />
                 <Route path="/pricing" element={<Pricing />} />
@@ -209,9 +211,10 @@ const App = () => (
             </Suspense>
           </RouteErrorBoundary>
         </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  </HelmetProvider>
 );
 
 export default App;
