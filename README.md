@@ -200,3 +200,11 @@ See [`backend/.env.example`](backend/.env.example) for the full list of options.
 Built as a full-stack capstone project · **[Live Demo](https://archmind-ai-topaz.vercel.app)**
 
 </div>
+
+---
+
+## Case study
+
+The full write-up of ArchMind AI (problem, architecture, trade-offs and results) lives at **[kunjshah.in/projects/archmind-ai](https://kunjshah.in/projects/archmind-ai)**.
+
+Built by [Kunj Shah](https://kunjshah.in), AI engineer.
